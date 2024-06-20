@@ -1,6 +1,7 @@
 # Easy Model Switch
-MODEL = "llama3"
-# MODEL = "zephyr:latest"
+# MODEL = "llama3"
+MODEL = "zephyr:7b"
+TEMPARATURE = 0.9  # model creativity
 
 # Switched to local model
 # if MODEL == "llama3":
