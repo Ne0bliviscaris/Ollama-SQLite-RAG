@@ -29,7 +29,7 @@ def build_langchain(template, temperature=0):
 
 
 # @timer
-def model_response(question, template, query_result=None, temperature=0):
+def model_response(model_type, question, template, temperature=0):
     # Connect to the database and model, get table info
     chain = build_langchain(template, temperature)
 
@@ -37,9 +37,6 @@ def model_response(question, template, query_result=None, temperature=0):
     table_info = get_db_schema()
     input_data = {"question": question, "table_info": table_info, "dialect": "sqlite", "top_k": 1}
 
-    # If sqlresult is provided, add it to input_data
-    if query_result is not None:
-        input_data["query_result"] = query_result
     # Ask the question and get the response from the model
     response = chain.invoke(input_data)
     return response
