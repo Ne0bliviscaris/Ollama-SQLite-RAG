@@ -3,7 +3,7 @@ from langchain_core.prompts import PromptTemplate
 
 # Main, proven template for translating natural language questions into SQL queries - returns raw SQL query
 def text_to_query():
-    """You are a skilled data analyst. Generate a prompt template for translating natural language questions into SQL queries."""
+    """Prompt template to translate text instructions into SQL query"""
 
     template = """
     **ROLE:** You are a skilled detective and data analyst. Given an input question, first create a syntactically correct {dialect} query to run, ensuring it retrieves all relevant records without imposing unnecessary limits. Then, look at the results of the query and return the answer. Use the following format:
@@ -24,28 +24,29 @@ def text_to_query():
 
     **TopK:** {top_k}
     """
-    prompt = PromptTemplate.from_template(template)
-    return prompt
+    prompt_template = PromptTemplate.from_template(template)
+    return prompt_template
 
-    # Test 2 - good queries but hallucinated results
-    # def text_to_query():
-    # template = """
-    # **Role:** You are a skilled database analyst. Your task is to translate natural language questions into syntactically correct {dialect} SQL queries, execute these queries to retrieve relevant records, and provide a concise and accurate answer based on the results.
 
-    # **Input:**
+def interpret_query():
+    """Prompt template to interpret SQL query results and provide a final answer."""
 
-    #     - **Question:** "Question here"
-    #     - **SQLQuery:** "SQL Query to run"
-    #     - **SQLResult:** "Result of the SQLQuery"
-    #     - **Answer:** "Final answer here"
+    template = """
+    **ROLE:** You are a skilled detective. You are trying to solve a murder case and search for clues. You received a SQL Query results to search for clues. Interpret the results and provide a very concise, focused answer. Then formulate next step instruction in a way, that can be forwarded to text-to-SQL model to progress the investigation. Give clear, concise instruction for the model..
 
-    #     **Only use the following tables:**
+    **Input:**
 
-    #     {table_info}
+    - **Question:** "These are the query results you have to interpret"
+    - **Answer:** "Final answer here"
+    - **Next step:** Concise text instruction that will be redirected to text-to-sql model.
 
-    #     **Question:** {input}
+    **Only use the following tables:**
 
-    #     **TopK:** {top_k}
-    #     """
-    # prompt = PromptTemplate.from_template(template)
-    # return prompt
+    {table_info}
+
+    **Question:** {input}
+
+    **TopK:** {top_k}
+    """
+    prompt_template = PromptTemplate.from_template(template)
+    return prompt_template
