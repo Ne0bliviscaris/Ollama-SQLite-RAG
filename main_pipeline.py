@@ -1,4 +1,4 @@
-import connections
+import db
 import model
 
 # Manual query test
@@ -18,4 +18,4 @@ model_response = model.model_response(question)
 
 
 # STEP 2 - Pass the AI generated query straight to database
-query_result = connections.sql_query(model_response)
+query_result = db.sql_query(model_response)

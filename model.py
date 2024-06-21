@@ -1,9 +1,11 @@
 import time
 
 from langchain.chains import create_sql_query_chain
+from langchain_community.chat_models import ChatOllama
 
 import files.prompt_templates as templates
-from connections import database_connect, get_db_schema, ollama_connect
+from db import database_connect, get_db_schema
+from files.settings import MODEL, TEMPARATURE
 
 
 def timer(func):
@@ -40,3 +42,17 @@ def model_response(question):
     # Ask the question and get the response from the model
     response = chain.invoke(input_data)
     return response
+
+
+def ollama_connect(temperature=TEMPARATURE):
+    """
+    Establishes a connection to the Ollama model via Docker.
+
+    Input:
+        temperature: float - The temperature to use for the model.
+
+    Returns:
+        ChatOllama: An instance of the ChatOllama model with specified parameters.
+    """
+    llm = ChatOllama(model=MODEL, temperature=TEMPARATURE)
+    return llm

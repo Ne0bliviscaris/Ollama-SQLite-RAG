@@ -1,9 +1,8 @@
 import sqlite3
 
-from langchain_community.chat_models import ChatOllama
 from langchain_community.utilities import SQLDatabase
 
-from files.settings import DB_FILE, MODEL, TEMPARATURE
+from files.settings import DB_FILE
 
 
 def sql_query(query):
@@ -45,17 +44,3 @@ def database_connect():
     """
     db = SQLDatabase.from_uri(f"sqlite:///{DB_FILE}")
     return db
-
-
-def ollama_connect(temperature=TEMPARATURE):
-    """
-    Establishes a connection to the Ollama model via Docker.
-
-    Input:
-        temperature: float - The temperature to use for the model.
-
-    Returns:
-        ChatOllama: An instance of the ChatOllama model with specified parameters.
-    """
-    llm = ChatOllama(model=MODEL, temperature=TEMPARATURE)
-    return llm
