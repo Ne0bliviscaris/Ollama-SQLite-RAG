@@ -45,12 +45,12 @@ def rag(question, prints=False):
 
 
 if __name__ == "__main__":
-    # question = """
-    # Extract police MURDER type crime scene reports from 'SQL City' at 15 january 2018
-    # """
     question = """
-    The  witness resides at the last house on "Northwestern Dr"
+    Extract police MURDER type crime scene reports from 'SQL City' at 15 january 2018
     """
+    # question = """
+    # The  witness resides at the last house on "Northwestern Dr"
+    # """
     # question = """
     # find who lives in 'Northwestern Dr', 4919
     # """
