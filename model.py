@@ -5,7 +5,7 @@ from langchain_community.chat_models import ChatOllama
 
 import files.prompt_templates as templates
 from db import database_connect, get_db_schema
-from files.settings import MODEL, TEMPARATURE
+from files.settings import MODEL
 
 
 def timer(func):
@@ -21,19 +21,18 @@ def timer(func):
     return wrapper
 
 
-def build_langchain():
+def build_langchain(template, temperature=0):
     """Builds and returns a language chain with database and Ollama connections."""
     db = database_connect()
-    llm = ollama_connect(temperature=0)
-    prompt = templates.text_to_query()
-    chain = create_sql_query_chain(llm, db, prompt)
+    llm = ollama_connect(temperature=temperature)
+    chain = create_sql_query_chain(llm, db, template)
     return chain
 
 
-@timer
-def model_response(question):
+# @timer
+def model_response(question, template, temperature=0):
     # Connect to the database and model, get table info
-    chain = build_langchain()
+    chain = build_langchain(template, temperature)
 
     # Pass the question to the model
     table_info = get_db_schema()
@@ -44,7 +43,7 @@ def model_response(question):
     return response
 
 
-def ollama_connect(temperature=TEMPARATURE):
+def ollama_connect(temperature):
     """
     Establishes a connection to the Ollama model via Docker.
 
@@ -54,5 +53,5 @@ def ollama_connect(temperature=TEMPARATURE):
     Returns:
         ChatOllama: An instance of the ChatOllama model with specified parameters.
     """
-    llm = ChatOllama(model=MODEL, temperature=TEMPARATURE)
+    llm = ChatOllama(model=MODEL, temperature=temperature)
     return llm
