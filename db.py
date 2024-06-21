@@ -26,6 +26,26 @@ def sql_query(query):
     return results_string
 
 
+def streamlit_sql_query(query):
+    """
+    Connect to database and execute SQL query
+    query: str - SQL query
+
+    Returns:
+        results_string: str - Results of the query as a string
+    """
+    db = DB_FILE  # database file
+    connection = sqlite3.connect(db)  # connect to db
+    cursor = connection.cursor()  # create cursor instance
+
+    cursor.execute(f"{query}")  # execute query
+
+    results = cursor.fetchall()  # fetch all results
+
+    connection.close()  # close connection
+    return results
+
+
 def query_result_to_string(results):
     """
     Convert query results to a string, each row from a new line.
