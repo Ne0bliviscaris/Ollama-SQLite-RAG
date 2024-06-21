@@ -7,6 +7,8 @@ from connections import database_connect, get_db_schema, ollama_connect
 
 
 def timer(func):
+    """Decorator to measure the execution time of a function."""
+
     def wrapper(*args, **kwargs):
         start_time = time.time()
         result = func(*args, **kwargs)
@@ -27,7 +29,7 @@ def build_langchain():
 
 
 @timer
-def process_query_and_get_response(question):
+def model_response(question):
     # Connect to the database and model, get table info
     chain = build_langchain()
 
