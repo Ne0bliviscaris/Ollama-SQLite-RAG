@@ -52,9 +52,30 @@ def streamlit_rag(question, prints=False):
 
 
 # Streamlit UI
-st.title("RAG Model for Database Queries")
+st.title("SQL RAG - local Ollama - Langchain")
+st.title("Projekt za podniesienie oceny z SQL - Mateusz Ratajczak")
+
 
 question = st.text_area("Enter your question here:", height=150)
 if st.button("Get Answer"):
     with st.spinner("Processing..."):
         answer = streamlit_rag(question, False)
+
+if st.button("Demo questions"):
+    st.write(
+        """
+Extract police MURDER type crime scene reports from 'SQL City' at 15 january 2018
+ 
+
+The witness resides at the last house on "Northwestern Dr"
+
+
+find who lives in 'Northwestern Dr', 4919
+
+
+find out more about Christopher Peteuil with license ID 993845
+
+"""
+    )
+if st.button("How does it work?"):
+    st.image("https://miro.medium.com/v2/resize:fit:1400/1*71lI66X4-4nxkKWVhrTW_A.png", caption="SQL Agent")
