@@ -32,7 +32,7 @@ def streamlit_sql_query(query):
     query: str - SQL query
 
     Returns:
-        results_string: str - Results of the query as a string
+        results: str - Results of the query as a list of tuples
     """
     db = DB_FILE  # database file
     connection = sqlite3.connect(db)  # connect to db
