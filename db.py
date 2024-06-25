@@ -14,16 +14,13 @@ def sql_query(query):
         results_string: str - Results of the query as a string
     """
     db = DB_FILE  # database file
-    connection = sqlite3.connect(db)  # connect to db
-    cursor = connection.cursor()  # create cursor instance
+    with sqlite3.connect(db) as db_connection:  # connect to db using context manager
+        cursor = db_connection.cursor()  # create cursor instance
+        cursor.execute(query)  # execute query
+        results = cursor.fetchall()  # each row is a tuple, all rows are in a list
+        results_string = query_result_to_string(results)  # convert results to a single string
 
-    cursor.execute(f"{query}")  # execute query
-
-    results = cursor.fetchall()  # fetch all results
-    results_string = query_result_to_string(results)
-
-    connection.close()  # close connection
-    return results_string
+    return results_string  # connection is automatically closed
 
 
 def streamlit_sql_query(query):
