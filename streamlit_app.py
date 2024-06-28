@@ -54,7 +54,6 @@ def streamlit_rag(question, prints=False):
 
 # Streamlit UI
 st.title("SQL RAG - local Ollama - Langchain")
-st.title("Projekt za podniesienie oceny z SQL - Mateusz Ratajczak")
 
 
 question = st.text_area("Enter your question here:", height=150)
@@ -75,6 +74,8 @@ find who lives in 'Northwestern Dr', 4919
 
 
 find out more about Christopher Peteuil with license ID 993845
+
+Which city has the highest crime rate?
 
 """
     )
