@@ -32,7 +32,8 @@ def streamlit_rag(question, prints=False):
         st.write("Translator model Response:")
         st.write(model_response)
 
-    st.markdown("---")
+    # st.markdown("---")
+    st.divider()
 
     # Execute the SQL query and display the query results in a separate container
     with st.container():
@@ -41,7 +42,8 @@ def streamlit_rag(question, prints=False):
         st.dataframe(query_results_df, height=200)
         query_results = db.query_result_to_string(query_results_df)
 
-    st.markdown("---")
+    # st.markdown("---")
+    st.divider()
 
     # Launch the Detective model with the query results and display the final answer in a separate container
     with st.container():
