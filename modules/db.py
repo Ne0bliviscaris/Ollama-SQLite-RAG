@@ -2,7 +2,7 @@ import sqlite3
 
 from langchain_community.utilities import SQLDatabase
 
-from files.settings import DB_FILE
+from modules.settings import DB_FILE
 
 
 def sql_query(query):

@@ -10,4 +10,4 @@ TEMPARATURE = 0  # model creativity
 #     MODEL_URL = "http://localhost:55555"
 
 
-DB_FILE = r"files\sql-murder-mystery.db"
+DB_FILE = r"modules\database\sql-murder-mystery.db"

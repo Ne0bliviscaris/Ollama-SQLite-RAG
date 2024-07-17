@@ -2,7 +2,8 @@
 import time
 
 from langchain_community.llms.ollama import Ollama
-from settings import MODEL, MODEL_URL
+
+from modules.settings import MODEL, MODEL_URL
 
 llm = Ollama(model=MODEL, base_url=MODEL_URL, temperature=0)
 

@@ -1,6 +1,6 @@
 import streamlit as st
 
-import db
+import modules.db as db
 import modules.model as model
 from modules.prompt_templates import conclude, text_to_query
 
