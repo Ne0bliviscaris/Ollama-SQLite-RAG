@@ -6,7 +6,7 @@ TEMPARATURE = 0  # model creativity
 # Switched to local model
 # if MODEL == "llama3":
 #     MODEL_URL = "http://localhost:11434"
-# elif MODEL == "zephyr:latest":
+# elif MODEL == "zephyr:7b":
 #     MODEL_URL = "http://localhost:55555"
 
 

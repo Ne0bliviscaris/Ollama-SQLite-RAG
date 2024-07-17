@@ -28,8 +28,7 @@ def build_langchain(template, temperature=0):
     return chain
 
 
-# @timer
-def model_response(model_type, question, template, temperature=0):
+def model_response(question, template, temperature=0):
     # Connect to the database and model, get table info
     chain = build_langchain(template, temperature)
 
