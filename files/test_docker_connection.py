@@ -17,5 +17,5 @@ end_time = time.time()
 # Calculate response time
 response_time = end_time - start_time
 
-print(f"Odpowiedź od modelu {MODEL}: {response}")
-print(f"Czas odpowiedzi modelu {MODEL}: {response_time:.2f} sekund")
+print(f"Model response {MODEL}: {response}")
+print(f"Model response time {MODEL}: {response_time:.2f} sekund")
