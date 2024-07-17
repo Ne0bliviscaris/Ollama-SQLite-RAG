@@ -1,6 +1,6 @@
+import modules.ai.model as model
 import modules.db as db
-import modules.model as model
-from modules.prompt_templates import conclude, text_to_query
+from modules.ai.prompt_templates import conclude, text_to_query
 
 
 def launch_model(model_type, question, template, prints=False):
