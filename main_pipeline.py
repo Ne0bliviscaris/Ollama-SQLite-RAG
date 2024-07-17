@@ -1,5 +1,5 @@
 import modules.ai.model as model
-import modules.database.db as db
+import modules.db as db
 from modules.ai.prompt_templates import conclude, text_to_query
 
 
@@ -44,7 +44,6 @@ def rag(question, prints=False):
     return rag_answer
 
 
-# Test the RAG model
 if __name__ == "__main__":
     question = """
     Extract police MURDER type crime scene reports from 'SQL City' at 15 january 2018

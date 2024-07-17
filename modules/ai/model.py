@@ -3,7 +3,7 @@ import time
 from langchain.chains import create_sql_query_chain
 from langchain_community.chat_models import ChatOllama
 
-from modules.database.db import database_connect, get_db_schema
+from modules.db import database_connect, get_db_schema
 from modules.settings import MODEL
 
 
