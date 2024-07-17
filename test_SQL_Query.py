@@ -5,6 +5,7 @@ database = database_connect()
 results_string = sql_query(
     """
                            SELECT * FROM person where license_id = 993845 
-                           limit 10"""
+                           limit 10
+    """
 )
 print(results_string)
