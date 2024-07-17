@@ -1,28 +1,31 @@
 import modules.ai.model as model
-import modules.database.db as db
 from modules.ai.prompt_templates import conclude, text_to_query
+from modules.database.db import sql_query
 
 
-def launch_model(model_type, question, template, prints=False):
+def launch_model(model_type, question):
     """Run the model and return the response."""
-    model_response = model.model_response(model_type, question=question, template=template, temperature=0)
-
-    # Print the user input and model response on demand
-    if prints == True:
-        print(f"\nModel type: \n{model_type}")
-        print(f"\nModel answer:\n{model_response}")
+    model_response = model.model_response(model_type=model_type, question=question, temperature=0)
     return model_response
 
 
-def sql_query(model_response, prints=False):
-    """Run SQL query and return the result"""
-
-    if prints == True:
-        print(f"Forwarding SQL Query")
-
-    query_result = db.sql_query(model_response)
-
-    # Print the SQL query result on demand
-    if prints == True:
-        print(f"\nSQL Query Result:\n{query_result}")
+def sql_query(model_response):
+    """Extract and run SQL query and return the result"""
+    query = extract_query_from_model(model_response)
+    query_result = sql_query(query)
     return query_result
+
+
+def extract_query_from_model(model_response):
+    """Get the query from the model response"""
+    import re
+
+    match = re.search(r"SELECT.*?(?:;|$)", model_response, re.IGNORECASE)
+    if match:
+        sql_query = match.group(0).strip()
+        # Add a semicolon if missing
+        if not sql_query.endswith(";"):
+            sql_query += ";"
+        return sql_query
+    else:
+        return "No SQL query found in the response."

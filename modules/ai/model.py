@@ -3,6 +3,7 @@ import time
 from langchain.chains import create_sql_query_chain
 from langchain_community.chat_models import ChatOllama
 
+from modules.ai.prompt_templates import conclude, text_to_query
 from modules.database.db import database_connect, get_db_schema
 from modules.settings import MODEL
 
@@ -28,8 +29,16 @@ def build_langchain(template, temperature=0):
     return chain
 
 
-def model_response(question, template, temperature=0):
+def choose_template(model_type):
+    if model_type == "SQL Translator":
+        return text_to_query()
+    elif model_type == "Detective":
+        return conclude()
+
+
+def model_response(model_type, question, temperature=0):
     # Connect to the database and model, get table info
+    template = choose_template(model_type)
     chain = build_langchain(template, temperature)
 
     # Pass the question to the model

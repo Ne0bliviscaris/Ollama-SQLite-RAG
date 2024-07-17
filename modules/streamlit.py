@@ -1,7 +1,6 @@
 import streamlit as st
 
 import modules.database.db as db
-from modules.ai.prompt_templates import conclude, text_to_query
 from modules.ai.rag_pipeline import launch_model
 
 
@@ -9,7 +8,7 @@ def rag_translate(question):
     """
     Launch model to translate text to SQL query
     """
-    model_response = launch_model("SQL Translator", question, text_to_query())
+    model_response = launch_model(model_type="SQL Translator", question=question)
     st.write("Translator model Response:")
     st.write(model_response)
     return model_response
@@ -26,6 +25,6 @@ def db_query(query):
 
 def rag_detective(query_results):
     """Run Detective model to analyze query results"""
-    rag_answer = launch_model("Detective", query_results, conclude())
+    rag_answer = launch_model(model_type="Detective", question=query_results)
     st.write("RAG Answer:")
     st.write(rag_answer)
