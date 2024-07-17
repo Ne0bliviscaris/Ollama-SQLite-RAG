@@ -1,6 +1,6 @@
 import streamlit as st
 
-import modules.db as db
+import modules.database.db as db
 from modules.ai.prompt_templates import conclude, text_to_query
 from rag_pipeline import launch_model
 

@@ -1,4 +1,4 @@
-from modules.db import database_connect, sql_query
+from modules.database.db import database_connect, sql_query
 
 database = database_connect()
 # Manual query test

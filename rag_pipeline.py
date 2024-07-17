@@ -1,5 +1,5 @@
 import modules.ai.model as model
-import modules.db as db
+import modules.database.db as db
 from modules.ai.prompt_templates import conclude, text_to_query
 
 
