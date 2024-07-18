@@ -1,3 +1,6 @@
+import os
+import subprocess
+
 import streamlit as st
 
 from modules.ai.model import model_response
@@ -6,6 +9,18 @@ from modules.database.db import (
     execute_sql_query,
     extract_query_from_string,
 )
+
+
+def rag_container():
+    """
+    Streamlit container for the RAG model.
+    Shows a text area to enter a question and a button to get the answer.
+    Pressing the button will trigger the RAG pipeline.
+    """
+    question = st.text_area("Enter your question here:", height=150)
+    if st.button("Get Answer"):
+        with st.spinner("Processing..."):
+            streamlit_rag_pipeline(question)
 
 
 def streamlit_rag_pipeline(question):
@@ -58,3 +73,43 @@ def detective_container(query_results):
         rag_answer = model_response(model_type="Detective", question=query_results)
         st.write("RAG Answer:")
         st.write(rag_answer)
+
+
+def get_demo_questions(file_path="files/demo_rag_questions.txt"):
+    """
+    Read demo questions from a file and return them as a list of strings.
+    """
+    questions = []
+    try:
+        with open(file_path, "r", encoding="utf-8") as file:
+            questions = file.readlines()
+        # Remove any trailing newline characters
+        questions = [question.strip() for question in questions]
+    except FileNotFoundError:
+        st.error(f"File not found: {file_path}")
+    except Exception as e:
+        st.error(f"An error occurred while reading the file: {e}")
+    return questions
+
+
+def demo_questions_button():
+    if st.button("Demo questions"):
+        # Display demo questions from txt file
+        demo_question = get_demo_questions()
+        for question in demo_question:
+            st.write(question)
+
+
+def how_does_it_work_button():
+    if st.button("How does it work?"):
+        st.image("files\\sql-agent.png", caption="SQL Agent")
+
+
+def launch_streamlit(file_path):
+
+    # Launch streamlit and check if it's not already running
+    if not os.environ.get("RUNNING_IN_STREAMLIT"):
+        # Mark streamlit as running
+        os.environ["RUNNING_IN_STREAMLIT"] = "1"
+        # Run streamlit
+        subprocess.run(["streamlit", "run", file_path], check=True)
