@@ -4,9 +4,9 @@ import subprocess
 import streamlit as st
 
 from modules.ai.model import model_response
-from modules.database.db import (
+from modules.database.db_functions import execute_sql_query
+from modules.database.sql_functions import (
     convert_query_result_to_string,
-    execute_sql_query,
     extract_query_from_string,
 )
 

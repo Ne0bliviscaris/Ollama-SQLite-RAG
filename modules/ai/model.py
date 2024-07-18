@@ -4,7 +4,7 @@ from langchain.chains import create_sql_query_chain
 from langchain_community.chat_models import ChatOllama
 
 from modules.ai.prompt_templates import conclude, text_to_query
-from modules.database.db import database_connect, get_db_schema
+from modules.database.db_functions import database_connect, get_db_schema
 from modules.settings import MODEL
 
 
