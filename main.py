@@ -1,27 +1,11 @@
 import streamlit as st
 
-from modules.streamlit import db_query, rag_detective, rag_translate
-
-
-def streamlit_rag(question):
-    """Full pipeline to answer a database related question using RAG model, with Streamlit display."""
-
-    # Step 1: Translate text instructions into SQL query
-    with st.container():
-        generated_query = rag_translate(question)
-
-    st.divider()
-
-    # Step 2: Execute the SQL query and display the results in a separate container
-    with st.container():
-        query_results = db_query(generated_query)
-
-    st.divider()
-
-    # Step 3: Launch the Detective model with the query results and display the final answer in a separate container
-    with st.container():
-        rag_detective(query_results)
-
+from modules.streamlit_objects import (
+    detective_container,
+    extract_and_execute_query_container,
+    streamlit_rag_pipeline,
+    translator_container,
+)
 
 # Streamlit UI
 st.title("SQL RAG - local Ollama - Langchain")
@@ -30,7 +14,7 @@ st.title("SQL RAG - local Ollama - Langchain")
 question = st.text_area("Enter your question here:", height=150)
 if st.button("Get Answer"):
     with st.spinner("Processing..."):
-        answer = streamlit_rag(question)
+        answer = streamlit_rag_pipeline(question)
 
 if st.button("Demo questions"):
     st.write(

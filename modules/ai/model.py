@@ -29,7 +29,7 @@ def build_langchain(template, temperature=0):
     return chain
 
 
-def choose_template(model_type):
+def select_prompt_template(model_type):
     if model_type == "SQL Translator":
         return text_to_query()
     elif model_type == "Detective":
@@ -37,8 +37,11 @@ def choose_template(model_type):
 
 
 def model_response(model_type, question, temperature=0):
+    """
+    Launch the model and return the response.
+    """
     # Connect to the database and model, get table info
-    template = choose_template(model_type)
+    template = select_prompt_template(model_type)
     chain = build_langchain(template, temperature)
 
     # Pass the question to the model
