@@ -3,21 +3,13 @@ import subprocess
 
 from streamlit import title
 
-from modules.streamlit import (
-    demo_questions_button,
-    how_does_it_work_button,
-    rag_container,
-)
+from modules.streamlit import rag
 
 
 def main():
     title("SQL RAG - local Ollama - Langchain")
 
-    rag_container()
-
-    demo_questions_button()
-
-    how_does_it_work_button()
+    rag()
 
 
 if __name__ == "__main__":  # Poprawiono cudzysłowy
