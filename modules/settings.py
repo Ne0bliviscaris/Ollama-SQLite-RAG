@@ -1,6 +1,7 @@
 # Easy Model Switch
 # MODEL = "llama3"
-MODEL = "zephyr:7b"
+# MODEL = "zephyr:7b"
+MODEL = "deepseek-r1:1.5b"
 TEMPARATURE = 0  # model creativity
 
 # Switched to local model
