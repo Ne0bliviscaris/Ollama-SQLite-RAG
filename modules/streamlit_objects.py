@@ -103,13 +103,3 @@ def demo_questions_button():
 def how_does_it_work_button():
     if st.button("How does it work?"):
         st.image("files\\sql-agent.png", caption="SQL Agent")
-
-
-def launch_streamlit(file_path):
-
-    # Launch streamlit and check if it's not already running
-    if not os.environ.get("RUNNING_IN_STREAMLIT"):
-        # Mark streamlit as running
-        os.environ["RUNNING_IN_STREAMLIT"] = "1"
-        # Run streamlit
-        subprocess.run(["streamlit", "run", file_path], check=True)
