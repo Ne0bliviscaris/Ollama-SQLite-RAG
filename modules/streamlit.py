@@ -1,10 +1,7 @@
-import os
-import subprocess
-
 import streamlit as st
 
 from modules.ai.model import model_response
-from modules.database.db_functions import execute_sql_query
+from modules.database.db import execute_sql_query
 from modules.database.query_tools import (
     convert_query_result_to_string,
     extract_query_from_string,

@@ -3,7 +3,7 @@ import subprocess
 
 from streamlit import title
 
-from modules.streamlit_objects import (
+from modules.streamlit import (
     demo_questions_button,
     how_does_it_work_button,
     rag_container,
