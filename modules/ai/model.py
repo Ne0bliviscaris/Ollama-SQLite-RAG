@@ -4,21 +4,8 @@ from langchain.chains import create_sql_query_chain
 from langchain_community.chat_models import ChatOllama
 
 from modules.ai.prompt_templates import conclude, text_to_query
-from modules.database.db_functions import database_connect, get_db_schema
+from modules.database.db import database_connect, get_db_schema
 from modules.settings import MODEL
-
-
-def timer(func):
-    """Decorator to measure the execution time of a function."""
-
-    def wrapper(*args, **kwargs):
-        start_time = time.time()
-        result = func(*args, **kwargs)
-        end_time = time.time()
-        print(f"\nExecution time of {func.__name__}: {(end_time - start_time):.3f} seconds.")
-        return result
-
-    return wrapper
 
 
 def build_langchain(template, temperature=0):
@@ -54,14 +41,7 @@ def model_response(model_type, question, temperature=0):
 
 
 def ollama_connect(temperature):
-    """
-    Establishes a connection to the Ollama model via Docker.
-
-    Input:
-        temperature: float - The temperature to use for the model.
-
-    Returns:
-        ChatOllama: An instance of the ChatOllama model with specified parameters.
-    """
+    """Establishes a connection to the Ollama model via Docker.
+    temperature: float - model creativity parameter."""
     llm = ChatOllama(model=MODEL, temperature=temperature)
     return llm

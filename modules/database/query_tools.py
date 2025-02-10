@@ -17,8 +17,6 @@ def extract_query_from_string(model_response):
 
 def convert_query_result_to_string(results):
     """
-    Convert query results to a string, each row from a new line.
-    results: list of tuples - The result from a SQL query execution.
-    """
+    Convert query results to a string, each row from a new line."""
     results_string = "\n".join([str(row) for row in results])
     return results_string
