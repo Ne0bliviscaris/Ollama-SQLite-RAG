@@ -7,28 +7,18 @@ from modules.settings import DB_FILE
 
 
 def execute_sql_query(extracted_query):
-    """
-    Connect to database and execute SQL query
-    query: str - SQL query
+    """Connect to database and execute SQL query"""
+    db = DB_FILE
+    with sqlite3.connect(db) as db_connection:
+        cursor = db_connection.cursor()
+        cursor.execute(extracted_query)
+        results = cursor.fetchall()
 
-    Returns:
-        results_string: str - Results of the query as a string
-    """
-    db = DB_FILE  # database file
-    with sqlite3.connect(db) as db_connection:  # connect to db using context manager
-        cursor = db_connection.cursor()  # create cursor instance
-        cursor.execute(extracted_query)  # execute query
-        results = cursor.fetchall()  # each row is a tuple, all rows are in a list
-
-    return results  # connection is automatically closed
+    return results
 
 
 def get_db_schema():
-    """
-    Get the schema of the database
-
-    Returns:
-    schema: dict - schema of the database"""
+    """Get the schema of the database"""
     db = SQLDatabase.from_uri(f"sqlite:///{DB_FILE}")
 
     schema = db.get_table_info()
@@ -36,11 +26,6 @@ def get_db_schema():
 
 
 def database_connect():
-    """
-    Establishes a connection to the SQL database using the provided URI.
-
-    Returns:
-        SQLDatabase: An instance of the SQLDatabase connected to the specified database.
-    """
+    """Establishes a connection to the SQL database using the provided URI."""
     db = SQLDatabase.from_uri(f"sqlite:///{DB_FILE}")
     return db
