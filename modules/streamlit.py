@@ -8,7 +8,7 @@ from modules.database.query_tools import (
 )
 
 
-def rag_container():
+def rag():
     """
     Streamlit container for the RAG model.
     Shows a text area to enter a question and a button to get the answer.
@@ -16,36 +16,26 @@ def rag_container():
     """
     question = st.text_area("Enter your question here:", height=150)
     if st.button("Get Answer"):
-        with st.spinner("Processing..."):
-            streamlit_rag_pipeline(question)
 
+        st.header("Translator model Response:")
+        with st.spinner("Processing the question"):
+            generated_answer = model_response(model_type="SQL Translator", question=question)
+            with st.expander(label="Show full response"):
+                st.write(generated_answer)
 
-def streamlit_rag_pipeline(question):
-    """Full pipeline to answer a database related question using RAG model, with Streamlit display."""
+        st.divider()
+        st.header("Translated query results:")
+        with st.spinner("Executing the query"):
+            query_results = extract_and_execute_query_container(generated_answer)
+            with st.expander(label="Query Results:"):
+                st.write(query_results)
 
-    # Step 1: Translate text instructions into SQL query
-    generated_answer = translator_container(question)
-
-    st.divider()
-
-    # Step 2: Execute the SQL query and display the results in a separate container
-    query_results = extract_and_execute_query_container(generated_answer)
-
-    st.divider()
-
-    # Step 3: Launch the Detective model with the query results and display the final answer in a separate container
-    detective_container(query_results)
-
-
-def translator_container(question):
-    """
-    Launch model to translate text to SQL query
-    """
-    with st.container():
-        model_answer = model_response(model_type="SQL Translator", question=question)
-        st.write("Translator model Response:")
-        st.write(model_answer)
-        return model_answer
+        st.divider()
+        st.header("Detective's conclusion:")
+        with st.spinner("Analyzing the results"):
+            detective_answer = model_response(model_type="Detective", question=query_results)
+            with st.expander(label="Detective model Response:"):
+                st.write(detective_answer)
 
 
 def extract_and_execute_query_container(model_response):
@@ -70,33 +60,3 @@ def detective_container(query_results):
         rag_answer = model_response(model_type="Detective", question=query_results)
         st.write("RAG Answer:")
         st.write(rag_answer)
-
-
-def get_demo_questions(file_path="files/demo_rag_questions.txt"):
-    """
-    Read demo questions from a file and return them as a list of strings.
-    """
-    questions = []
-    try:
-        with open(file_path, "r", encoding="utf-8") as file:
-            questions = file.readlines()
-        # Remove any trailing newline characters
-        questions = [question.strip() for question in questions]
-    except FileNotFoundError:
-        st.error(f"File not found: {file_path}")
-    except Exception as e:
-        st.error(f"An error occurred while reading the file: {e}")
-    return questions
-
-
-def demo_questions_button():
-    if st.button("Demo questions"):
-        # Display demo questions from txt file
-        demo_question = get_demo_questions()
-        for question in demo_question:
-            st.write(question)
-
-
-def how_does_it_work_button():
-    if st.button("How does it work?"):
-        st.image("files\\sql-agent.png", caption="SQL Agent")

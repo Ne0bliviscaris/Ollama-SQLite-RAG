@@ -1,5 +1,3 @@
-import time
-
 from langchain.chains import create_sql_query_chain
 from langchain_community.chat_models import ChatOllama
 
