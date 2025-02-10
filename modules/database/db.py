@@ -1,4 +1,3 @@
-import re
 import sqlite3
 
 from langchain_community.utilities import SQLDatabase
