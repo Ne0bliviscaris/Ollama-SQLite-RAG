@@ -1,24 +1,9 @@
-import time
-
 from langchain.chains import create_sql_query_chain
 from langchain_community.chat_models import ChatOllama
 
 from modules.ai.prompt_templates import conclude, text_to_query
 from modules.database.db import database_connect, get_db_schema
-from modules.settings import MODEL
-
-
-def timer(func):
-    """Decorator to measure the execution time of a function."""
-
-    def wrapper(*args, **kwargs):
-        start_time = time.time()
-        result = func(*args, **kwargs)
-        end_time = time.time()
-        print(f"\nExecution time of {func.__name__}: {(end_time - start_time):.3f} seconds.")
-        return result
-
-    return wrapper
+from modules.settings import MODEL, MODEL_TIMEOUT
 
 
 def build_langchain(template, temperature=0):
@@ -29,7 +14,7 @@ def build_langchain(template, temperature=0):
     return chain
 
 
-def choose_template(model_type):
+def select_prompt_template(model_type):
     if model_type == "SQL Translator":
         return text_to_query()
     elif model_type == "Detective":
@@ -37,8 +22,11 @@ def choose_template(model_type):
 
 
 def model_response(model_type, question, temperature=0):
+    """
+    Launch the model and return the response.
+    """
     # Connect to the database and model, get table info
-    template = choose_template(model_type)
+    template = select_prompt_template(model_type)
     chain = build_langchain(template, temperature)
 
     # Pass the question to the model
@@ -50,15 +38,8 @@ def model_response(model_type, question, temperature=0):
     return response
 
 
-def ollama_connect(temperature):
-    """
-    Establishes a connection to the Ollama model via Docker.
-
-    Input:
-        temperature: float - The temperature to use for the model.
-
-    Returns:
-        ChatOllama: An instance of the ChatOllama model with specified parameters.
-    """
-    llm = ChatOllama(model=MODEL, temperature=temperature)
+def ollama_connect(temperature=0):
+    """Establishes a connection to the Ollama model via Docker.
+    temperature: float - model creativity parameter."""
+    llm = ChatOllama(model=MODEL, temperature=temperature, request_timeout=MODEL_TIMEOUT)
     return llm
