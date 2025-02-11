@@ -3,7 +3,7 @@ from langchain_community.chat_models import ChatOllama
 
 from modules.ai.prompt_templates import conclude, text_to_query
 from modules.database.db import database_connect, get_db_schema
-from modules.settings import MODEL
+from modules.settings import MODEL, MODEL_TIMEOUT
 
 
 def build_langchain(template, temperature=0):
@@ -38,8 +38,8 @@ def model_response(model_type, question, temperature=0):
     return response
 
 
-def ollama_connect(temperature):
+def ollama_connect(temperature=0):
     """Establishes a connection to the Ollama model via Docker.
     temperature: float - model creativity parameter."""
-    llm = ChatOllama(model=MODEL, temperature=temperature)
+    llm = ChatOllama(model=MODEL, temperature=temperature, request_timeout=MODEL_TIMEOUT)
     return llm
