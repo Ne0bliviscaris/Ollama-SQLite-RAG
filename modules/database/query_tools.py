@@ -1,22 +1,31 @@
 import re
 
 
-def extract_query_from_string(model_response):
-    """Get the query from the model response"""
+def sql_regex() -> str:
+    """Define regex pattern components for SQL query."""
+    SELECT = r"SELECT"
+    anything = r".*?"  # Non-greedy match of any text
+    FROM = r"FROM"
+    QUERY_END = r"(?=\n|$)"  # End of line or string
 
-    match = re.search(r"SELECT.*?(?:;|$)", model_response, re.IGNORECASE)
+    return f"({SELECT}{anything}{FROM}{anything}){QUERY_END}"
+
+
+def extract_sql_query(model_response: str) -> str:
+    """Extract SQL SELECT query with FROM clause from the response string."""
+    regex = sql_regex()
+    # Search for SQL query with case-insensitive flag
+    match = re.search(regex, model_response, re.IGNORECASE | re.DOTALL)
+
     if match:
-        sql_query = match.group(0).strip()
-        # Add a semicolon if missing
-        if not sql_query.endswith(";"):
-            sql_query += ";"
+        sql_query = match.group(1).strip()
         return sql_query
-    else:
-        return "No SQL query found in the response."
+
+    return "No valid SQL query found in the response."
 
 
-def convert_query_result_to_string(results):
-    """
-    Convert query results to a string, each row from a new line."""
-    results_string = "\n".join([str(row) for row in results])
-    return results_string
+test_str = """
+SELECT * FROM crime_scene_report WHERE city = 'Las Vegas'
+"""
+
+print(extract_sql_query(test_str))
