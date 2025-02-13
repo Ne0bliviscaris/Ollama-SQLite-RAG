@@ -43,3 +43,20 @@ def ollama_connect(temperature=0):
     temperature: float - model creativity parameter."""
     llm = ChatOllama(model=MODEL, temperature=temperature, request_timeout=MODEL_TIMEOUT)
     return llm
+
+
+def split_model_answer(model_answer: str) -> tuple[str, str]:
+    """Split model output into thinking process and final answer."""
+    # Szukamy znaczników <think> i </think>
+    THINK_START = "<think>"
+    content = "(.*?)"
+    THINK_END = "</think>"
+    think_pattern = rf"{THINK_START}{content}{THINK_END}"
+    import re
+
+    thinking = re.search(think_pattern, model_answer, re.DOTALL)
+    thinking_process = thinking.group(1).strip() if thinking else ""
+
+    output = re.sub(pattern=think_pattern, repl="", string=model_answer, flags=re.DOTALL).strip()
+
+    return output, thinking_process
