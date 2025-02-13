@@ -15,7 +15,16 @@ def execute_sql_query(extracted_query):
         cursor.execute(extracted_query)
         results = cursor.fetchall()
 
-    return results
+        results_str = convert_list_to_string(results)
+        return results_str
+
+
+def convert_list_to_string(results):
+    """Convert list of tuples to string"""
+    results_str = ""
+    for row in results:
+        results_str += str(row) + "\n"
+    return results_str
 
 
 def get_db_schema():
