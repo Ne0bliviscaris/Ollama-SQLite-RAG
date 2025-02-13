@@ -8,7 +8,7 @@ def sql_regex() -> str:
     FROM = r"FROM"
     QUERY_END = r"(?=\n|$)"  # End of line or string
 
-    return f"({SELECT}{anything}{FROM}{anything}){QUERY_END}"
+    return f"({SELECT} {anything} {FROM} {anything}){QUERY_END}"
 
 
 def extract_sql_query(model_response: str) -> str:
@@ -22,10 +22,3 @@ def extract_sql_query(model_response: str) -> str:
         return sql_query
 
     return "No valid SQL query found in the response."
-
-
-test_str = """
-SELECT * FROM crime_scene_report WHERE city = 'Las Vegas'
-"""
-
-print(extract_sql_query(test_str))
