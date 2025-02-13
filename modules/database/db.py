@@ -8,6 +8,8 @@ from modules.settings import DB_FILE
 def execute_sql_query(extracted_query):
     """Connect to database and execute SQL query"""
     db = DB_FILE
+    if extracted_query == "No valid SQL query found in the response.":
+        return extracted_query
     with sqlite3.connect(db) as db_connection:
         cursor = db_connection.cursor()
         cursor.execute(extracted_query)
