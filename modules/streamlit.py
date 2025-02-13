@@ -1,11 +1,8 @@
 import streamlit as st
 
-from modules.ai.model import model_response
+from modules.ai.model import model_response, split_model_answer
 from modules.database.db import execute_sql_query
-from modules.database.query_tools import (
-    convert_query_result_to_string,
-    extract_query_from_string,
-)
+from modules.database.query_tools import extract_sql_query
 
 
 def rag():
@@ -16,47 +13,50 @@ def rag():
     """
     question = st.text_area("Enter your question here:", height=150)
     if st.button("Get Answer"):
+        with st.container(key="Translator"):
+            st.header("Translator model Response:")
+            generated_answer, thinking_process = rag_translate(question)
 
-        st.header("Translator model Response:")
-        with st.spinner("Processing the question"):
-            generated_answer = model_response(model_type="SQL Translator", question=question)
-            with st.expander(label="Show full response"):
-                st.write(generated_answer)
+            st.write(generated_answer)
+            with st.expander(label="Thinking process"):
+                st.write(thinking_process)
 
-        st.divider()
-        st.header("Translated query results:")
-        with st.spinner("Executing the query"):
-            query_results = extract_and_execute_query_container(generated_answer)
+        with st.container(key="Query Results"):
+            st.divider()
+            st.header("Translated query:")
+            extracted_query, query_results = process_sql_query(generated_answer)
+            st.write(extracted_query)
+            query_results = execute_sql_query(extracted_query)
             with st.expander(label="Query Results:"):
                 st.write(query_results)
 
-        st.divider()
-        st.header("Detective's conclusion:")
-        with st.spinner("Analyzing the results"):
-            detective_answer = model_response(model_type="Detective", question=query_results)
-            with st.expander(label="Detective model Response:"):
+        with st.container(key="Detective"):
+            st.divider()
+            st.header("Detective's conclusion:")
+
+            with st.spinner("Analyzing the results"):
+                detective_answer, thinking_process = rag_detective(query_results)
                 st.write(detective_answer)
+                with st.expander(label="Thinking process"):
+                    st.write(thinking_process)
 
 
-def extract_and_execute_query_container(model_response):
-    """Extract SQL query from model response and execute it"""
-    with st.container():
-        # Extract SQL query from model response
-        extracted_query = extract_query_from_string(model_response)
-        st.write("SQL Query extracted from model's answer:")
-        st.write(extracted_query)
-        # Execute SQL query
-        query_results_df = execute_sql_query(extracted_query)
-        st.write("SQL Query Results:")
-        st.dataframe(query_results_df, height=200)
-        # Convert query results to a string
-        query_results_string = convert_query_result_to_string(query_results_df)
-        return query_results_string
+def rag_translate(question):
+    """Translate the natural question to SQL query"""
+    generated_answer = model_response(model_type="SQL Translator", question=question)
+    generated_answer, thinking_process = split_model_answer(generated_answer)
+    return generated_answer, thinking_process
 
 
-def detective_container(query_results):
-    """Run Detective model to analyze query results"""
-    with st.container():
-        rag_answer = model_response(model_type="Detective", question=query_results)
-        st.write("RAG Answer:")
-        st.write(rag_answer)
+def rag_detective(query_results_list):
+    """Detective's conclusion"""
+    detective_answer = model_response(model_type="Detective", question=query_results_list)
+    answer, thinking_process = split_model_answer(detective_answer)
+    return answer, thinking_process
+
+
+def process_sql_query(model_answer):
+    """Handle the SQL query received from the model"""
+    extracted_query = extract_sql_query(model_answer)
+    query_results = execute_sql_query(extracted_query)
+    return extracted_query, query_results
