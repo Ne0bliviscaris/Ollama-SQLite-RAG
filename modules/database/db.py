@@ -7,10 +7,9 @@ from modules.settings import DB_FILE
 
 def execute_sql_query(extracted_query):
     """Connect to database and execute SQL query"""
-    db = DB_FILE
     if extracted_query == "No valid SQL query found in the response.":
         return extracted_query
-    with sqlite3.connect(db) as db_connection:
+    with sqlite3.connect(DB_FILE) as db_connection:
         cursor = db_connection.cursor()
         cursor.execute(extracted_query)
         results = cursor.fetchall()
@@ -29,10 +28,8 @@ def convert_list_to_string(results):
 
 def get_db_schema():
     """Get the schema of the database"""
-    db = SQLDatabase.from_uri(f"sqlite:///{DB_FILE}")
-
-    schema = db.get_table_info()
-    return schema
+    db = database_connect()
+    return db.get_table_info()
 
 
 def database_connect():
