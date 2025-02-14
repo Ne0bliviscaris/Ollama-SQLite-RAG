@@ -66,7 +66,7 @@ def update_query_context(sql_query, query_content):
     if not query_content:
         query_content = "No results found."
 
-    update_chat_history("system", f"SQL Query: {sql_query}")
+    update_chat_history("database", f"SQL Query: {sql_query}")
     st.session_state.context["sql_queries"].append(sql_query)
     st.session_state.context["query_results"].append(query_content)
 
@@ -82,7 +82,7 @@ def show_chat_history():
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
-            if message["role"] == "system":
+            if message["role"] == "database":
                 show_query_results()
             if message["role"] == "assistant":
                 show_thinking_process()
