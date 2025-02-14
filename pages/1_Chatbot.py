@@ -3,6 +3,36 @@ import streamlit as st
 from modules.streamlit import process_sql_query, rag_detective, rag_translate
 
 
+def chatbot():
+    """Chatbot interface."""
+    st.title("SQL Detective Chatbot")
+    initialize_chat_session()
+
+    display_chat_input()
+
+    with st.container():
+        show_chat_history()
+
+    # # Debug view (opcjonalnie)
+    # with st.expander("Debug: Session State"):
+    #     st.write(st.session_state)
+
+
+def rag_pipeline(user_input: str):
+    """Process user input through RAG pipeline."""
+    update_chat_history("user", user_input)
+    st.session_state.context["user_inputs"].append(user_input)
+
+    with st.spinner("Translating to SQL..."):
+        model_answer = process_user_input(user_input)
+        sql_query, query_content = process_sql_query(model_answer)
+        update_query_context(sql_query=sql_query, query_content=query_content)
+
+    with st.spinner("Detective is analyzing the results..."):
+        detective_answer, detective_thinking = rag_detective(query_content)
+        process_detective_results(detective_answer, detective_thinking)
+
+
 def initialize_chat_session():
     """Initialize chat session state variables."""
     if "messages" not in st.session_state:
@@ -22,18 +52,6 @@ def update_chat_history(role: str, content: str):
     st.session_state.messages.append({"role": role, "content": content})
 
 
-def chatbot(user_input: str):
-    """Process user input through RAG pipeline."""
-    model_answer = process_user_input(user_input)
-
-    sql_query, query_content = process_sql_query(model_answer)
-
-    update_query_context(sql_query=sql_query, query_content=query_content)
-
-    detective_answer, detective_thinking = rag_detective(query_content)
-    process_detective_results(detective_answer, detective_thinking)
-
-
 def process_detective_results(detective_answer, detective_thinking):
     """Process detective results and update chat history."""
     update_chat_history("assistant", detective_answer)
@@ -43,7 +61,6 @@ def process_detective_results(detective_answer, detective_thinking):
 
 def update_query_context(sql_query, query_content):
     """Process SQL query and return results."""
-    # Zapisz wyniki SQL
     if not sql_query:
         sql_query = "No valid SQL query found in the response."
     if not query_content:
@@ -56,29 +73,8 @@ def update_query_context(sql_query, query_content):
 
 def process_user_input(user_input: str):
     """Process user input and update chat history."""
-    update_chat_history("user", user_input)
-    st.session_state.context["user_inputs"].append(user_input)
-
-    # Przetłumacz na SQL
     model_answer, _ = rag_translate(user_input)
     return model_answer
-
-
-def chat():
-    """Chatbot interface."""
-    st.title("SQL Detective Chatbot")
-    initialize_chat_session()
-
-    # Chat input
-    if prompt := st.chat_input("Ask about the case..."):
-        chatbot(prompt)
-
-    with st.container():
-        show_chat_history()
-
-    # # Debug view (opcjonalnie)
-    # with st.expander("Debug: Session State"):
-    #     st.write(st.session_state)
 
 
 def show_chat_history():
@@ -104,4 +100,9 @@ def show_thinking_process():
         st.write(st.session_state.context["detective_thinking"][-1])
 
 
-chat()
+def display_chat_input():
+    if prompt := st.chat_input("Ask about the case..."):
+        rag_pipeline(prompt)
+
+
+chatbot()
