@@ -14,13 +14,15 @@ def execute_sql_query(extracted_query):
         cursor.execute(extracted_query)
         results = cursor.fetchall()
 
-        results_str = convert_list_to_string(results)
+        column_names = [description[0] for description in cursor.description]
+
+        results_str = convert_list_to_string(results, column_names)
         return results_str
 
 
-def convert_list_to_string(results):
-    """Convert list of tuples to string"""
-    results_str = ""
+def convert_list_to_string(results, columns):
+    """Convert list of tuples to string with column names"""
+    results_str = f"COLUMNS:{','.join(columns)}\n"
     for row in results:
         results_str += str(row) + "\n"
     return results_str
