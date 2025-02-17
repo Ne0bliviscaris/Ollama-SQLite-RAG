@@ -2,7 +2,7 @@ import streamlit as st
 
 from modules.ai.model import model_response, split_model_answer
 from modules.database.db import execute_sql_query
-from modules.database.query_tools import extract_sql_query
+from modules.database.tools import extract_sql_query
 
 
 def update_context(key, value):
