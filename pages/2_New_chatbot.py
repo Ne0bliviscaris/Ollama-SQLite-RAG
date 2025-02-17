@@ -43,11 +43,10 @@ def show_chat_history():
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
-            if message["role"] == "translator":
+            if message["role"] == "database":
                 show_query_results()
             if message["role"] == "assistant":
-                # show_thinking_process() of the detective
-                ...
+                show_thinking_process()
 
 
 def rag_pipeline():
@@ -57,28 +56,32 @@ def rag_pipeline():
         translate_question()
     if st.session_state.current_state == "database":
         execute_query()
+    if st.session_state.current_state == "detective":
+        detective_conclusion()
 
 
 def translate_question():
     """Translate the natural question to SQL query"""
-    question = st.session_state.context["user_inputs"][-1]
-    generated_answer = model_response(model_type="SQL Translator", question=question)
-    generated_answer, thinking_process = split_model_answer(generated_answer)
-    extracted_query = extract_sql_query(generated_answer)
-    update_messages("translator", extracted_query)
-    update_context("sql_queries", extracted_query)
-    st.session_state.current_state = "database"
-    st.rerun()
+    with st.spinner("Translating to SQL..."):
+        question = st.session_state.context["user_inputs"][-1]
+        generated_answer = model_response(model_type="SQL Translator", question=question)
+        generated_answer, thinking_process = split_model_answer(generated_answer)
+        extracted_query = extract_sql_query(generated_answer)
+        update_messages("database", extracted_query)
+        update_context("sql_queries", extracted_query)
+        st.session_state.current_state = "database"
+        st.rerun()
 
 
 def execute_query():
     """Execute SQL query and return results."""
-    query = st.session_state.context["sql_queries"][-1]
-    query_results = execute_sql_query(query)
-    update_context("query_results", query_results)
+    with st.spinner("Executing SQL query..."):
+        query = st.session_state.context["sql_queries"][-1]
+        query_results = execute_sql_query(query)
+        update_context("query_results", query_results)
 
-    st.session_state.current_state = "detective"
-    st.rerun()
+        st.session_state.current_state = "detective"
+        st.rerun()
 
 
 def show_query_results():
@@ -102,13 +105,32 @@ def show_query_results():
                 st.write(results)
 
 
+def detective_conclusion():
+    """Detective's conclusion."""
+    with st.spinner("Detective is analyzing the results..."):
+        last_query_results = st.session_state.context["query_results"][-1]
+        detective_answer = model_response(model_type="Detective", question=last_query_results)
+        detective_answer, thinking_process = split_model_answer(detective_answer)
+        update_messages("assistant", detective_answer)
+        update_context("detective_answers", detective_answer)
+        update_context("detective_thinking", thinking_process)
+        st.session_state.current_state = None
+        st.rerun()
+
+
+def show_thinking_process():
+    """Display detective's thinking process in expandable section."""
+    with st.expander("Detective's Thinking Process"):
+        st.write(st.session_state.context["detective_thinking"][-1])
+
+
 def main():
     initialize_chat_session()
     with st.container():
         show_chat_history()
     rag_pipeline()
 
-    st.write(st.session_state)
+    # st.write(st.session_state)
 
 
 main()
