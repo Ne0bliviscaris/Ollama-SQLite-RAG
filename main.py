@@ -1,15 +1,24 @@
 import os
 import subprocess
 
-from streamlit import title
+import streamlit as st
 
-from modules.streamlit import rag
+from modules.chatbot import chatbot
+
+
+def title_screen():
+    st.title("SQL RAG - local Ollama - Langchain")
+    st.markdown(
+        """
+        Welcome to the SQL RAG chatbot! Ask about the case to get started.
+        """
+    )
 
 
 def main():
-    title("SQL RAG - local Ollama - Langchain")
-
-    rag()
+    if not st.session_state:
+        title_screen()
+    chatbot()
 
 
 if __name__ == "__main__":  # Poprawiono cudzysłowy

@@ -22,20 +22,22 @@ def select_prompt_template(model_type):
 
 
 def model_response(model_type, question, temperature=0):
-    """
-    Launch the model and return the response.
-    """
-    # Connect to the database and model, get table info
-    template = select_prompt_template(model_type)
-    chain = build_langchain(template, temperature)
+    """Launch the model and return the response."""
+    try:
+        # Connect to the database and model, get table info
+        template = select_prompt_template(model_type)
+        chain = build_langchain(template, temperature)
 
-    # Pass the question to the model
-    table_info = get_db_schema()
-    input_data = {"question": question, "table_info": table_info, "dialect": "sqlite", "top_k": 1}
+        # Pass the question to the model
+        table_info = get_db_schema()
+        input_data = {"question": question, "table_info": table_info, "dialect": "sqlite", "top_k": 1}
 
-    # Ask the question and get the response from the model
-    response = chain.invoke(input_data)
-    return response
+        # Ask the question and get the response from the model
+
+        response = chain.invoke(input_data)
+        return response
+    except Exception as e:
+        return f"Model Connection error. Make sure Ollama is running and {MODEL} is installed."
 
 
 def ollama_connect(temperature=0):

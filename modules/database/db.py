@@ -2,6 +2,7 @@ import sqlite3
 
 from langchain_community.utilities import SQLDatabase
 
+from modules.database.tools import convert_list_to_string
 from modules.settings import DB_FILE
 
 
@@ -14,16 +15,10 @@ def execute_sql_query(extracted_query):
         cursor.execute(extracted_query)
         results = cursor.fetchall()
 
-        results_str = convert_list_to_string(results)
+        column_names = [description[0] for description in cursor.description]
+
+        results_str = convert_list_to_string(results, column_names)
         return results_str
-
-
-def convert_list_to_string(results):
-    """Convert list of tuples to string"""
-    results_str = ""
-    for row in results:
-        results_str += str(row) + "\n"
-    return results_str
 
 
 def get_db_schema():
