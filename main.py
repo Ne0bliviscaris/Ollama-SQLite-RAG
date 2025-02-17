@@ -3,13 +3,13 @@ import subprocess
 
 from streamlit import title
 
-from modules.streamlit import rag
+from modules.chatbot import chatbot
 
 
 def main():
     title("SQL RAG - local Ollama - Langchain")
 
-    rag()
+    chatbot()
 
 
 if __name__ == "__main__":  # Poprawiono cudzysłowy

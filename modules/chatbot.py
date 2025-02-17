@@ -3,7 +3,6 @@ import streamlit as st
 from modules.ai.model import model_response, split_model_answer
 from modules.database.db import execute_sql_query
 from modules.database.query_tools import extract_sql_query
-from modules.streamlit import process_sql_query, rag_detective, rag_translate
 
 
 def update_context(key, value):
@@ -124,7 +123,7 @@ def show_thinking_process():
         st.write(st.session_state.context["detective_thinking"][-1])
 
 
-def main():
+def chatbot():
     initialize_chat_session()
     with st.container():
         show_chat_history()
@@ -133,4 +132,4 @@ def main():
     # st.write(st.session_state)
 
 
-main()
+chatbot()
