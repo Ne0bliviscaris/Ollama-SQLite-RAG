@@ -1,3 +1,4 @@
+import pandas as pd
 import streamlit as st
 
 from modules.ai.model import model_response, split_model_answer
@@ -5,12 +6,12 @@ from modules.database.db import execute_sql_query
 from modules.database.tools import extract_sql_query
 
 
-def update_context(key, value):
-    st.session_state.context[key].append(value)
-
-
-def update_messages(role, content):
-    st.session_state.messages.append({"role": role, "content": content})
+def chatbot():
+    initialize_chat_session()
+    display_chat_input()
+    with st.container():
+        show_chat_history()
+    rag_pipeline()
 
 
 def initialize_chat_session():
@@ -50,7 +51,6 @@ def show_chat_history():
 
 def rag_pipeline():
     """Main RAG pipeline."""
-    display_chat_input()
     if st.session_state.current_state == "translator":
         translate_question()
     if st.session_state.current_state == "database":
@@ -64,11 +64,11 @@ def translate_question():
     with st.spinner("Translating to SQL..."):
         question = st.session_state.context["user_inputs"][-1]
         generated_answer = model_response(model_type="SQL Translator", question=question)
-        generated_answer, thinking_process = split_model_answer(generated_answer)
-        extracted_query = extract_sql_query(generated_answer)
+        translation, _ = split_model_answer(generated_answer)
+        extracted_query = extract_sql_query(translation)
         update_messages("database", extracted_query)
         update_context("sql_queries", extracted_query)
-        st.session_state.current_state = "database"
+        update_current_state("database")
         st.rerun()
 
 
@@ -78,30 +78,38 @@ def execute_query():
         query = st.session_state.context["sql_queries"][-1]
         query_results = execute_sql_query(query)
         update_context("query_results", query_results)
-
-        st.session_state.current_state = "detective"
+        update_current_state("detective")
         st.rerun()
+
+
+def update_context(key, value):
+    st.session_state.context[key].append(value)
+
+
+def update_messages(role, content):
+    st.session_state.messages.append({"role": role, "content": content})
 
 
 def show_query_results():
     """Display query results as DataFrame."""
+    if not st.session_state.context["query_results"]:
+        return
     with st.expander("Query Results"):
-        if st.session_state.context["query_results"]:
-            # Konwersja string wyników na DataFrame
-            results = st.session_state.context["query_results"][-1]
-            if isinstance(results, str) and results != "No valid SQL query found in the response.":
-                # Rozdziel nazwy kolumn i dane
-                lines = results.strip().split("\n")
-                columns = lines[0].replace("COLUMNS:", "").split(",")
+        results = st.session_state.context["query_results"][-1]
+        if isinstance(results, str) and results != "No valid SQL query found in the response.":
+            df = convert_results_to_dataframe(results)
+            st.dataframe(df)
+        else:
+            st.write(results)
 
-                # Konwersja pozostałych linii na DataFrame
-                rows = [eval(row) for row in lines[1:]]
-                import pandas as pd
 
-                df = pd.DataFrame(rows, columns=columns)
-                st.dataframe(df)
-            else:
-                st.write(results)
+def convert_results_to_dataframe(results):
+    """Convert query results to DataFrame."""
+    rows = results.strip().split("\n")
+    headers = rows[0].replace("COLUMNS:", "").split(",")
+    records = [eval(row) for row in rows[1:]]
+    df = pd.DataFrame(records, columns=headers)
+    return df
 
 
 def detective_conclusion():
@@ -113,23 +121,15 @@ def detective_conclusion():
         update_messages("assistant", detective_answer)
         update_context("detective_answers", detective_answer)
         update_context("detective_thinking", thinking_process)
-        st.session_state.current_state = None
+        update_current_state(None)
         st.rerun()
+
+
+def update_current_state(state):
+    st.session_state.current_state = state
 
 
 def show_thinking_process():
     """Display detective's thinking process in expandable section."""
     with st.expander("Detective's Thinking Process"):
         st.write(st.session_state.context["detective_thinking"][-1])
-
-
-def chatbot():
-    initialize_chat_session()
-    with st.container():
-        show_chat_history()
-    rag_pipeline()
-
-    # st.write(st.session_state)
-
-
-chatbot()
