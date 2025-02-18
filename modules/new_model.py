@@ -13,12 +13,7 @@ class Model:
 
     def __init__(self, question):
         self.question = question
-        self.langchain = None
         self.template = None
-        self.langchain = None
-        self.model_answer = None
-        self.response = None
-        self.thinking_process = None
 
     def model_config(self):
         """Static part of model configuration"""
@@ -30,9 +25,9 @@ class Model:
     def _initialize(self):
         """Initialize chain and get response."""
         self.langchain = self.build_langchain()
-        response = self.get_model_response()
-        self.response, self.thinking_process = self.split_model_answer(response)
-        return self.response, self.thinking_process
+        self.full_response = self.get_model_response()
+        self.answer, self.thinking = self.split_model_answer(self.full_response)
+        return self.answer, self.thinking
 
     def split_model_answer(self, model_answer: str) -> tuple[str, str]:
         """Split model output into thinking process and final answer."""
@@ -42,9 +37,9 @@ class Model:
         THINK_END = "</think>"
         think_pattern = rf"{THINK_START}{content}{THINK_END}"
         thinking = re.search(think_pattern, model_answer, re.DOTALL)
-        self.thinking_process = thinking.group(1).strip() if thinking else ""
+        self.thinking = thinking.group(1).strip() if thinking else ""
         self.output = re.sub(pattern=think_pattern, repl="", string=model_answer, flags=re.DOTALL).strip()
-        return self.output, self.thinking_process
+        return self.output, self.thinking
 
     def get_model_response(self):
         """Get response using instance attributes."""
@@ -135,5 +130,5 @@ class Detective(Model):
     def build_langchain(self):
         """Builds and returns a language chain with database and Ollama connections."""
         db = database_connect()
-        llm = ChatOllama(model=MODEL, temperature=1, request_timeout=self.timeout)
+        llm = ChatOllama(temperature=1, **self.model_config())
         return create_sql_query_chain(llm, db, self.template)
