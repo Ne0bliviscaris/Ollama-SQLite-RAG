@@ -1,9 +1,9 @@
 import pandas as pd
 import streamlit as st
 
-from modules.ai.model import model_response, split_model_answer
 from modules.database.db import execute_sql_query
 from modules.database.tools import extract_sql_query
+from modules.new_model import Detective, Translator
 
 
 def chatbot():
@@ -63,9 +63,8 @@ def translate_question():
     """Translate the natural question to SQL query"""
     with st.spinner("Translating to SQL..."):
         question = st.session_state.context["user_inputs"][-1]
-        generated_answer = model_response(model_type="SQL Translator", question=question)
-        translation, _ = split_model_answer(generated_answer)
-        extracted_query = extract_sql_query(translation)
+        translation = Translator(question=question)
+        extracted_query = extract_sql_query(translation.answer)
         update_messages("database", extracted_query)
         update_context("sql_queries", extracted_query)
         update_current_state("database")
@@ -79,6 +78,18 @@ def execute_query():
         query_results = execute_sql_query(query)
         update_context("query_results", query_results)
         update_current_state("detective")
+        st.rerun()
+
+
+def detective_conclusion():
+    """Detective's conclusion."""
+    with st.spinner("Detective is analyzing the results..."):
+        last_query_results = st.session_state.context["query_results"][-1]
+        detective = Detective(question=last_query_results)
+        update_messages("assistant", detective.answer)
+        update_context("detective_answers", detective.answer)
+        update_context("detective_thinking", detective.thinking)
+        update_current_state(None)
         st.rerun()
 
 
@@ -110,19 +121,6 @@ def convert_results_to_dataframe(results):
     records = [eval(row) for row in rows[1:]]
     df = pd.DataFrame(records, columns=headers)
     return df
-
-
-def detective_conclusion():
-    """Detective's conclusion."""
-    with st.spinner("Detective is analyzing the results..."):
-        last_query_results = st.session_state.context["query_results"][-1]
-        detective_answer = model_response(model_type="Detective", question=last_query_results)
-        detective_answer, thinking_process = split_model_answer(detective_answer)
-        update_messages("assistant", detective_answer)
-        update_context("detective_answers", detective_answer)
-        update_context("detective_thinking", thinking_process)
-        update_current_state(None)
-        st.rerun()
 
 
 def update_current_state(state):
