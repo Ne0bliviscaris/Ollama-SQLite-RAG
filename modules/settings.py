@@ -2,7 +2,6 @@
 # MODEL = "llama3"
 # MODEL = "zephyr:7b"
 MODEL = "deepseek-r1:1.5b"
-TEMPARATURE = 0  # model creativity
 MODEL_TIMEOUT = 10  # model response timeout in seconds
 
 # Switched to local model
