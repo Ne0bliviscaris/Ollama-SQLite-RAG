@@ -5,6 +5,12 @@ import streamlit as st
 
 from modules.chatbot import chatbot
 
+st.set_page_config(
+    page_title="Local SQL RAG",
+    page_icon="🤖",
+    menu_items={"About": "https://github.com/Ne0bliviscaris/Ollama-SQLite-RAG"},
+)
+
 
 def title_screen():
     st.title("SQL RAG - local Ollama - Langchain")
