@@ -5,7 +5,7 @@ from langchain_core.prompts import PromptTemplate
 from langchain_ollama import ChatOllama
 
 from modules.database.db import database_connect, get_db_schema
-from modules.settings import MODEL, MODEL_TIMEOUT
+from modules.settings import MODEL
 
 
 class Model:
@@ -19,7 +19,6 @@ class Model:
         self.model_answer = None
         self.response = None
         self.thinking_process = None
-        self.timeout = MODEL_TIMEOUT
 
     def model_config(self):
         """Static part of model configuration"""
@@ -35,12 +34,6 @@ class Model:
         self.response, self.thinking_process = self.split_model_answer(response)
         return self.response, self.thinking_process
 
-    def __repr__(self):
-        question = self.question if self.question else "No question"
-        response = self.response if self.response else "No response"
-        thinking_process = self.thinking_process if self.thinking_process else "No thinking process"
-        return f"Question: {question}\nResponse: {response}\nThinking Process: {thinking_process}"
-
     def split_model_answer(self, model_answer: str) -> tuple[str, str]:
         """Split model output into thinking process and final answer."""
         # Szukamy znaczników <think> i </think>
@@ -53,22 +46,12 @@ class Model:
         self.output = re.sub(pattern=think_pattern, repl="", string=model_answer, flags=re.DOTALL).strip()
         return self.output, self.thinking_process
 
-    @classmethod
-    def model_response(cls, question: str):
-        """Launch the model and return the response."""
-        instance = cls(question)
-        return instance.get_model_response()
-
     def get_model_response(self):
         """Get response using instance attributes."""
         try:
             return self.langchain.invoke(self.instructions)
         except Exception as e:
             return f"Model Connection error. Make sure Ollama is running and {MODEL} is installed.\n{e}"
-
-    def build_langchain(self):
-        """Builds and returns a language chain with database and Ollama connections."""
-        pass
 
 
 class Translator(Model):
