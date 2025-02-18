@@ -21,6 +21,13 @@ class Model:
         self.thinking_process = None
         self.timeout = MODEL_TIMEOUT
 
+    def model_config(self):
+        """Static part of model configuration"""
+        model = MODEL
+        top_k = 1
+        output_tokens_limit = 500
+        return {"model": model, "top_k": top_k, "num_predict": output_tokens_limit}
+
     def _initialize(self):
         """Initialize chain and get response."""
         self.langchain = self.build_langchain()
@@ -84,7 +91,6 @@ class Translator(Model):
             "question": self.question,
             "table_info": self.db_info,
             "input": self.question,
-            # "top_k": 1,
             "dialect": "sqlite",
         }
         return instructions
@@ -106,7 +112,7 @@ class Translator(Model):
     def build_langchain(self):
         """Builds and returns a language chain with database and Ollama connections."""
         db = database_connect()
-        llm = ChatOllama(model=MODEL, temperature=0, request_timeout=self.timeout, top_k=1)
+        llm = ChatOllama(temperature=0, **self.model_config())
         return create_sql_query_chain(llm, db, self.template)
 
 
