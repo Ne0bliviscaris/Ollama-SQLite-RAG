@@ -1,6 +1,8 @@
+import re
+
 from langchain.chains import create_sql_query_chain
-from langchain_community.chat_models import ChatOllama
 from langchain_core.prompts import PromptTemplate
+from langchain_ollama import ChatOllama
 
 from modules.database.db import database_connect, get_db_schema
 from modules.settings import MODEL, MODEL_TIMEOUT
@@ -17,11 +19,12 @@ class Model:
         self.model_answer = None
         self.response = None
         self.thinking_process = None
+        self.timeout = MODEL_TIMEOUT
 
     def _initialize(self):
         """Initialize chain and get response."""
         self.langchain = self.build_langchain()
-        response = self.get_response()
+        response = self.get_model_response()
         self.response, self.thinking_process = self.split_model_answer(response)
         return self.response, self.thinking_process
 
@@ -38,22 +41,18 @@ class Model:
         content = "(.*?)"
         THINK_END = "</think>"
         think_pattern = rf"{THINK_START}{content}{THINK_END}"
-        import re
-
         thinking = re.search(think_pattern, model_answer, re.DOTALL)
         self.thinking_process = thinking.group(1).strip() if thinking else ""
-
         self.output = re.sub(pattern=think_pattern, repl="", string=model_answer, flags=re.DOTALL).strip()
-
         return self.output, self.thinking_process
 
     @classmethod
     def model_response(cls, question: str):
         """Launch the model and return the response."""
         instance = cls(question)
-        return instance.get_response()
+        return instance.get_model_response()
 
-    def get_response(self):
+    def get_model_response(self):
         """Get response using instance attributes."""
         try:
             return self.langchain.invoke(self.instructions)
@@ -68,51 +67,29 @@ class Model:
 class Translator(Model):
     def __init__(self, question: str):
         self.question = question
-        # self.template = self.translator_template()
-        self.role = """You are a skilled detective and data analyst. Given an input question, first create a syntactically correct {dialect} query to run."""
+        self.db_info = get_db_schema()
+        self.role = self.set_role()
         self.instructions = self.instructions()
-        self.template = self.test_template()
+        self.template = self.translator_template()
         super().__init__(question)
         self.response, self.thinking_process = self._initialize()
+
+    def set_role(self):
+        """Set the role of the translator model."""
+        return "You are a helpful SQL Translator. Given an input question, create a simple, syntactically correct {dialect} query to run."
 
     def instructions(self):
         """Instructions dict for the translator model."""
         instructions = {
             "question": self.question,
-            "template": self.translator_template(),
-            "table_info": get_db_schema(),
+            "table_info": self.db_info,
             "input": self.question,
-            "top_k": 1,
+            # "top_k": 1,
             "dialect": "sqlite",
         }
         return instructions
 
     def translator_template(self) -> str:
-        """Prompt template to translate text instructions into SQL query"""
-
-        template = """
-        **ROLE:** You are a skilled detective and data analyst. Given an input question, first create a syntactically correct {dialect} query to run, ensuring it retrieves all relevant records without imposing unnecessary limits. Then, look at the results of the query and return the answer. Use the following format:
-
-
-        **Input:**
-
-        - **Question:** "Question here"
-        - **SQLQuery:** "SQL Query to run"
-        - **SQLResult:** "Result of the SQLQuery"
-        - **Answer:** "Final answer here"
-
-        **Only use the following tables:**
-
-        {table_info}
-
-        **Question:** {input}
-
-        **TopK:** {top_k}
-        """
-        prompt_template = PromptTemplate.from_template(template)
-        return prompt_template
-
-    def test_template(self) -> str:
         """Prompt template to translate text instructions into SQL query"""
         template = f"""
         **ROLE:** {self.role}
@@ -123,14 +100,13 @@ class Translator(Model):
         {{table_info}}
 
         **Question:** {{input}}
-        **TopK:** {{top_k}}
         """
         return PromptTemplate.from_template(template)
 
     def build_langchain(self):
         """Builds and returns a language chain with database and Ollama connections."""
         db = database_connect()
-        llm = ChatOllama(model=MODEL, temperature=0, request_timeout=MODEL_TIMEOUT)
+        llm = ChatOllama(model=MODEL, temperature=0, request_timeout=self.timeout, top_k=1)
         return create_sql_query_chain(llm, db, self.template)
 
 
@@ -170,5 +146,5 @@ class Detective(Model):
     def build_langchain(self):
         """Builds and returns a language chain with database and Ollama connections."""
         db = database_connect()
-        llm = ChatOllama(model=MODEL, temperature=1, request_timeout=MODEL_TIMEOUT)
+        llm = ChatOllama(model=MODEL, temperature=1, request_timeout=self.timeout)
         return create_sql_query_chain(llm, db, self.template)
