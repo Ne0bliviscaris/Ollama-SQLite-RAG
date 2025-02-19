@@ -12,8 +12,9 @@ from modules.settings import MODEL, TOKENS_LIMIT, TOP_K, TOP_P
 class Model:
     """Base class for all models."""
 
-    def __init__(self, question):
+    def __init__(self, question, context=None):
         self.question = question
+        self.context = context
         self.langchain = self.build_langchain()
         self.full_response = self.get_model_response()
         self.formatted_response = self.format_response()
@@ -43,10 +44,18 @@ class Model:
         response = json.loads(self.full_response)
         return response
 
+    def template(self):
+        """Template for the model response."""
+        pass
+
+    def build_langchain(self):
+        """Builds and returns a language chain."""
+        pass
+
 
 class Translator(Model):
 
-    def translator_template(self) -> str:
+    def template(self) -> str:
         """Prompt template to translate text instructions into SQL query"""
         translator = """
         **ROLE:** You are a SQL Translator. Your task is to translate the following question into a valid SQL query. Use {dialect} dialect.
@@ -93,21 +102,21 @@ class Translator(Model):
         """Builds and returns a language chain with database and Ollama connections."""
         db = database_connect()
         llm = ChatOllama(temperature=0, **self.model_config())
-        template = self.translator_template()
+        template = self.template()
         return create_sql_query_chain(llm, db, template)
 
 
 class Detective(Model):
     def __init__(self, question: str):
         self.question = question
-        self.template = self.detective_template()
+        self.template = self.template()
         super().__init__(question)
         self.response, self.thinking_process = self._initialize()
 
-    def detective_template():
+    def template():
         """Prompt template to interpret SQL query results and provide a final answer."""
 
-        template = """
+        detective = """
         **ROLE:** You are a skilled detective. You are trying to solve a murder case and search for clues. Analyze received information. Interpret the results and provide a very concise, focused conclusion. Do not use any spare words. 
 
 
@@ -127,7 +136,7 @@ class Detective(Model):
 
         **TopK:** {top_k}
         """
-        prompt_template = PromptTemplate.from_template(template)
+        prompt_template = PromptTemplate.from_template(detective)
         return prompt_template
 
     def build_langchain(self):
