@@ -14,88 +14,58 @@ class Model:
 
     def __init__(self, question):
         self.question = question
-        self.template = None
+        self.langchain = self.build_langchain()
+        self.full_response = self.get_model_response()
+        self.formatted_response = self.format_response()
 
     def model_config(self):
         """Static part of model configuration"""
         return {
             "model": MODEL,
+            "format": "json",
             "num_predict": TOKENS_LIMIT,
+            "top_p": TOP_P,
         }
-
-    def _initialize(self):
-        """Initialize chain and get response."""
-        self.langchain = self.build_langchain()
-        self.full_response = self.get_model_response()
-        # parsed_response = json.loads(self.full_response)
-        # self.sql_query = parsed_response
-        return self.full_response
-        # self.answer, self.thinking = self.split_model_answer(self.full_response)
-        # return self.answer, self.thinking
-        # return self.sql_query
-
-    def split_model_answer(self, model_answer: str) -> tuple[str, str]:
-        """Split model output into thinking process and final answer."""
-        # Szukamy znaczników <think> i </think>
-        THINK_PATTERN = r"<think>(.*?)</think>"
-        thinking_match = re.search(THINK_PATTERN, model_answer, re.DOTALL)
-        if thinking_match:
-            thinking = thinking_match.group(1).strip()
-            answer = re.sub(THINK_PATTERN, "", model_answer, flags=re.DOTALL).strip()
-        else:
-            thinking = ""
-            answer = model_answer.strip()
-
-        return answer, thinking
 
     def get_model_response(self):
         """Get response using instance attributes."""
         try:
             model_input = {
                 "input": self.question,
-                "top_k": TOP_K,
-                "table_info": get_db_schema(),
                 "question": self.question,
             }
             return self.langchain.invoke(model_input)
         except Exception as e:
             return f"Model Connection error. Make sure Ollama is running and {MODEL} is installed.\n{e}"
 
+    def format_response(self):
+        """Format the response from the model."""
+        response = json.loads(self.full_response)
+        return response
+
 
 class Translator(Model):
-    def __init__(self, question: str):
-        self.question = question
-        self.template = self.translator_template()
-        super().__init__(question)
-        self.sql_query = self._initialize()
-
-    def role(self):
-        """Set the role of the translator model."""
-        return f"You are a SQL Translator. Your task is to translate the following question into a valid SQL query."
-
-    def rules(self):
-        """Define rules for the translator model."""
-        return f"""
-        1. You ONLY use tables and columns from the Database Schema
-        2. You do not use your own knowledge
-        3. You do not use any external sources of information
-        4. You do not use any spare words
-        5. ONLY return the SQLQuery to run.
-        6. Keep the query simple and efficient
-        7. Do not present the results of the query
-        """
 
     def translator_template(self) -> str:
         """Prompt template to translate text instructions into SQL query"""
         translator = """
-        **ROLE:** {role}. Use {dialect} dialect.
+        **ROLE:** You are a SQL Translator. Your task is to translate the following question into a valid SQL query. Use {dialect} dialect.
         
         **Database Schema:**
         {table_info}
         
         **Rules:**
-        {rules}
+        1. Keep your thinking process short and concise.
+        2. You ONLY use tables and columns from the Database Schema
+        3. You do not use your own knowledge
+        4. You do not use any external sources of information
+        5. You do not use any spare words
+        6. ONLY return the SQLQuery to run.
+        7. Keep the query simple and efficient
+        8. Do not assume anything that is not provided in the database schema.
+        9. Fetch enough information for detective to solve the case.
 
+        Translate the following user input:
         **Input:** {input}
         
 
@@ -111,18 +81,18 @@ class Translator(Model):
         """
         return PromptTemplate(
             template=translator,
-            input_variables=["input", "top_k", "table_info"],
+            input_variables=["input"],
             partial_variables={
-                "role": self.role(),
                 "dialect": "sqlite",
-                "rules": self.rules(),
+                "top_k": TOP_K,
+                "table_info": get_db_schema(),
             },
         )
 
     def build_langchain(self):
         """Builds and returns a language chain with database and Ollama connections."""
         db = database_connect()
-        llm = ChatOllama(temperature=0, **self.model_config(), format="json")
+        llm = ChatOllama(temperature=0, **self.model_config())
         template = self.translator_template()
         return create_sql_query_chain(llm, db, template)
 
