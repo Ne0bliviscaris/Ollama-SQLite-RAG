@@ -1,6 +1,6 @@
 import json
 
-from langchain.chains import create_sql_query_chain
+from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import PromptTemplate
 from langchain_ollama import ChatOllama
 
@@ -111,10 +111,9 @@ class Translator(Model):
 
     def build_langchain(self):
         """Builds and returns a language chain with database and Ollama connections."""
-        db = database_connect()
         llm = ChatOllama(temperature=0, **self.model_config())
-        template = self.template()
-        return create_sql_query_chain(llm, db, template)
+        prompt = self.template()
+        return prompt | llm | StrOutputParser()
 
 
 # class Detective(Model):
