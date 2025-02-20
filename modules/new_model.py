@@ -11,8 +11,8 @@ from modules.settings import MODEL, TOKENS_LIMIT, TOP_K, TOP_P
 class Model:
     """Base class for all models."""
 
-    def __init__(self, question, context=None):
-        self.question = question
+    def __init__(self, user_input, context=None):
+        self.user_input = user_input
         self.context = context
         self.full_response = self.get_model_response()
         self.answer, self.thinking = self.format_response()
@@ -58,8 +58,8 @@ class Model:
 class Translator(Model):
     def model_input(self):
         return {
-            "input": self.question,
-            "question": self.question,
+            "input": self.user_input,
+            "question": self.user_input,
         }
 
     def template(self) -> str:

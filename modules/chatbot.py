@@ -63,8 +63,8 @@ def rag_pipeline():
 def translate_question():
     """Translate the natural question to SQL query"""
     with st.spinner("Translating to SQL..."):
-        question = st.session_state.context["user_inputs"][-1]
-        translation = Translator(question=question)
+        user_input = st.session_state.context["user_inputs"][-1]
+        translation = Translator(user_input)
         update_messages("database", translation.answer)
         update_context("sql_queries", translation.answer)
         update_current_state("database")
