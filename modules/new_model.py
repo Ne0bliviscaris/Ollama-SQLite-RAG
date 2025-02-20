@@ -30,11 +30,8 @@ class Model:
         """Get response using instance attributes."""
         try:
             langchain = self.build_langchain()
-            model_input = {
-                "input": self.question,
-                "question": self.question,
-            }
-            return langchain.invoke(model_input)
+
+            return langchain.invoke(self.model_input())
         except Exception as e:
             return f"Model Connection error. Make sure Ollama is running and {MODEL} is installed.\n{e}"
 
@@ -59,6 +56,11 @@ class Model:
 
 
 class Translator(Model):
+    def model_input(self):
+        return {
+            "input": self.question,
+            "question": self.question,
+        }
 
     def template(self) -> str:
         """Prompt template to translate text instructions into SQL query"""
