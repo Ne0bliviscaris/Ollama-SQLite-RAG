@@ -71,15 +71,19 @@ class Translator(Model):
         {table_info}
 
         **Rules:**
-        1. Keep your thinking process short and concise.
+        0. Make sure you provide sql_query in the output.
+        1. Make sure the query is valid and corresponds to the thinking process.
+        1. Keep your thinking process short, but make sure it follows user input.
         2. You ONLY use tables and columns from the Database Schema
-        3. You do not use your own knowledge
-        4. You do not use any external sources of information
-        5. You do not use any spare words
-        6. ONLY return the SQLQuery to run.
-        7. Keep the query simple, always select all columns.
-        8. Do not assume anything that is not provided in the database schema.
-        9. Fetch all columns for detective to solve the case.
+        3. You do not have access to the database, only the schema.
+        4. You do not have access to 'solution' table.
+        5. You do not use your own knowledge
+        6. You do not use any external sources of information
+        7. You do not use any spare words
+        8. ONLY return the SQLQuery to run.
+        9. Keep the query simple, always select all columns.
+        10. Do not assume anything that is not provided in the database schema.
+        11. Fetch all columns for detective to solve the case.
 
         Translate the following user input:
         **Input:** {input}
