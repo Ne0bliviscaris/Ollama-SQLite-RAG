@@ -1,6 +1,6 @@
 import json
 
-from langchain_core.output_parsers import StrOutputParser
+from langchain.chains import create_sql_query_chain
 from langchain_core.prompts import PromptTemplate
 from langchain_ollama import ChatOllama
 
@@ -93,7 +93,7 @@ class Translator(Model):
         Return outputs in the following JSON format:
         ```json
         {{
-            "thinking": "Thinking process, if there is any."
+            "thinking": "Thinking process, if there is any.",
             "sql_query": "SELECT * FROM table_name WHERE condition;",
         }}
         top_k: {top_k}
@@ -111,9 +111,10 @@ class Translator(Model):
 
     def build_langchain(self):
         """Builds and returns a language chain with database and Ollama connections."""
+        db = database_connect()
         llm = ChatOllama(temperature=0, **self.model_config())
         prompt = self.template()
-        return prompt | llm | StrOutputParser()
+        return create_sql_query_chain(llm, db, prompt)
 
 
 # class Detective(Model):
