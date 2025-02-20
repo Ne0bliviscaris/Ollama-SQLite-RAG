@@ -17,4 +17,4 @@ DB_FILE = r"modules\database\sql-murder-mystery.db"
 # Model settings:
 TOP_K = 1
 TOP_P = 0.01
-TOKENS_LIMIT = 5000
+TOKENS_LIMIT = 1000
