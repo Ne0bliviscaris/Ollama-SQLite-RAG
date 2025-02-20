@@ -2,7 +2,7 @@ import pandas as pd
 import streamlit as st
 
 from modules.database.db import execute_sql_query
-from modules.new_model import Detective, Translator
+from modules.new_model import Translator
 
 
 def chatbot():
@@ -84,12 +84,12 @@ def execute_query():
 def detective_conclusion():
     """Detective's conclusion."""
     with st.spinner("Detective is analyzing the results..."):
-        last_question = st.session_state.context["user_inputs"][-1]
-        last_query_results = st.session_state.context["query_results"][-1]
-        detective = Detective(question=last_question, context=last_query_results)
-        update_messages("assistant", detective.answer)
-        update_context("detective_answers", detective.answer)
-        update_context("detective_thinking", detective.thinking)
+        # last_question = st.session_state.context["user_inputs"][-1]
+        # last_query_results = st.session_state.context["query_results"][-1]
+        # detective = Detective(question=last_question, context=last_query_results)
+        # update_messages("assistant", detective.answer)
+        # update_context("detective_answers", detective.answer)
+        # update_context("detective_thinking", detective.thinking)
         update_current_state(None)
         st.rerun()
 

@@ -64,10 +64,10 @@ class Translator(Model):
         """Prompt template to translate text instructions into SQL query"""
         translator = """
         **ROLE:** You are a SQL Translator. Your task is to translate the following question into a valid SQL query. Use {dialect} dialect.
-        
+
         **Database Schema:**
         {table_info}
-        
+
         **Rules:**
         1. Keep your thinking process short and concise.
         2. You ONLY use tables and columns from the Database Schema
@@ -75,13 +75,13 @@ class Translator(Model):
         4. You do not use any external sources of information
         5. You do not use any spare words
         6. ONLY return the SQLQuery to run.
-        7. Keep the query simple, but fetch all columns.
+        7. Keep the query simple, always select all columns.
         8. Do not assume anything that is not provided in the database schema.
         9. Fetch all columns for detective to solve the case.
 
         Translate the following user input:
         **Input:** {input}
-        
+
 
         **Output:**
         Return outputs in the following JSON format:
@@ -111,41 +111,80 @@ class Translator(Model):
         return create_sql_query_chain(llm, db, template)
 
 
-class Detective(Model):
-    def __init__(self, question: str):
-        self.question = question
-        self.template = self.template()
-        super().__init__(question)
-        self.response, self.thinking_process = self._initialize()
+# class Detective(Model):
 
-    def template():
-        """Prompt template to interpret SQL query results and provide a final answer."""
+#     def template():
+#         """Prompt template to interpret SQL query results and provide a final answer."""
 
-        detective = """
-        **ROLE:** You are a skilled detective. You are trying to solve a murder case and search for clues. Analyze received information. Interpret the results and provide a very concise, focused conclusion. Do not use any spare words. 
+#         detective = """
+#         **ROLE:** You are a skilled detective. You are trying to solve a murder case and search for clues. Analyze received information. Interpret the results and provide a very concise, focused conclusion. Do not use any spare words.
 
 
-        **Input:**
+#         **Input:**
 
-        - **Input:** "These are the received results you have to interpret"
+#         - **Input:** "These are the received results you have to interpret"
 
-        Only write a short, concise conclusion.
+#         Only write a short, concise conclusion.
 
-        - **Answer:** "Concise conclusion here."
+#         - **Answer:** "Concise conclusion here."
 
-        **Only use the following tables:**
+#         **Only use the following tables:**
 
-        {table_info}
+#         {table_info}
 
-        **Input:** {input}
+#         **Input:** {input}
 
-        **TopK:** {top_k}
-        """
-        prompt_template = PromptTemplate.from_template(detective)
-        return prompt_template
+#         **TopK:** {top_k}
+#         """
+#         prompt_template = PromptTemplate.from_template(detective)
+#         return prompt_template
 
-    def build_langchain(self):
-        """Builds and returns a language chain with database and Ollama connections."""
-        db = database_connect()
-        llm = ChatOllama(temperature=1, **self.model_config())
-        return create_sql_query_chain(llm, db, self.template)
+#     def template(self) -> str:
+#         """Prompt template to translate text instructions into SQL query"""
+#         translator = """
+#         **ROLE:** You are a skilled detective. You are trying to solve a murder case and search for clues. Analyze received information. Interpret the results and provide a very concise, focused conclusion. Do not use any spare words.
+
+#         **Database Schema:**
+#         {table_info}
+
+#         **Rules:**
+#         1. Keep your thinking process short and concise.
+#         2. You ONLY use tables and columns from the Database Schema
+#         3. You do not use your own knowledge
+#         4. You do not use any external sources of information
+#         5. You do not use any spare words
+#         6. ONLY return the SQLQuery to run.
+#         7. Keep the query simple, but fetch all columns.
+#         8. Do not assume anything that is not provided in the database schema.
+#         9. Fetch all columns for detective to solve the case.
+
+#         Translate the following user input:
+#         **Input:** {input}
+
+
+#         **Output:**
+#         Return outputs in the following JSON format:
+#         ```json
+#         {{
+#             "thinking": "Thinking process, if there is any."
+#             "sql_query": "SELECT * FROM table_name WHERE condition;",
+#         }}
+#         top_k: {top_k}
+#         ```
+#         """
+#         return PromptTemplate(
+#             template=translator,
+#             input_variables=["input", "question"],
+#             partial_variables={
+#                 "dialect": "sqlite",
+#                 "top_k": TOP_K,
+#                 "table_info": get_db_schema(),
+#             },
+#         )
+
+#     def build_langchain(self):
+#         """Builds and returns a language chain with database and Ollama connections."""
+#         db = database_connect()
+#         llm = ChatOllama(temperature=0, **self.model_config())
+#         template = self.template()
+#         return create_sql_query_chain(llm, db, template)
