@@ -2,11 +2,12 @@ import pandas as pd
 import streamlit as st
 
 from modules.database.db import execute_sql_query
-from modules.database.tools import extract_sql_query
 from modules.new_model import Detective, Translator
 
 
 def chatbot():
+    """Main chatbot function."""
+    game_rules_sidebar()
     initialize_chat_session()
     display_chat_input()
     with st.container():
@@ -64,9 +65,8 @@ def translate_question():
     with st.spinner("Translating to SQL..."):
         question = st.session_state.context["user_inputs"][-1]
         translation = Translator(question=question)
-        extracted_query = extract_sql_query(translation.answer)
-        update_messages("database", extracted_query)
-        update_context("sql_queries", extracted_query)
+        update_messages("database", translation.answer)
+        update_context("sql_queries", translation.answer)
         update_current_state("database")
         st.rerun()
 
@@ -84,8 +84,9 @@ def execute_query():
 def detective_conclusion():
     """Detective's conclusion."""
     with st.spinner("Detective is analyzing the results..."):
+        last_question = st.session_state.context["user_inputs"][-1]
         last_query_results = st.session_state.context["query_results"][-1]
-        detective = Detective(question=last_query_results)
+        detective = Detective(question=last_question, context=last_query_results)
         update_messages("assistant", detective.answer)
         update_context("detective_answers", detective.answer)
         update_context("detective_thinking", detective.thinking)
@@ -131,3 +132,9 @@ def show_thinking_process():
     """Display detective's thinking process in expandable section."""
     with st.expander("Detective's Thinking Process"):
         st.write(st.session_state.context["detective_thinking"][-1])
+
+
+def game_rules_sidebar():
+    """Displays game rules & hints in the sidebar."""
+    st.sidebar.title("Game Rules")
+    st.sidebar.markdown("• Be concise\n• Only share relevant details\n• Stay in character")
