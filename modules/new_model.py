@@ -1,5 +1,4 @@
 import json
-import re
 
 from langchain.chains import create_sql_query_chain
 from langchain_core.prompts import PromptTemplate
@@ -15,9 +14,8 @@ class Model:
     def __init__(self, question, context=None):
         self.question = question
         self.context = context
-        self.langchain = self.build_langchain()
         self.full_response = self.get_model_response()
-        self.formatted_response = self.format_response()
+        self.answer, self.thinking = self.format_response()
 
     def model_config(self):
         """Static part of model configuration"""
@@ -31,26 +29,33 @@ class Model:
     def get_model_response(self):
         """Get response using instance attributes."""
         try:
+            langchain = self.build_langchain()
             model_input = {
                 "input": self.question,
                 "question": self.question,
             }
-            return self.langchain.invoke(model_input)
+            return langchain.invoke(model_input)
         except Exception as e:
             return f"Model Connection error. Make sure Ollama is running and {MODEL} is installed.\n{e}"
 
     def format_response(self):
         """Format the response from the model."""
-        response = json.loads(self.full_response)
-        return response
+        try:
+            if isinstance(self.full_response, str):
+                response = json.loads(self.full_response)
 
-    def template(self):
-        """Template for the model response."""
-        pass
+            elif isinstance(self.full_response, dict):
+                response = self.full_response
+            else:
+                return "Invalid response format", None
 
-    def build_langchain(self):
-        """Builds and returns a language chain."""
-        pass
+            answer = response.get("sql_query", None)
+            thinking = response.get("thinking", None)
+
+            return answer, thinking
+
+        except Exception as e:
+            return f"Response formatting error. Model response:\n{self.full_response}", None
 
 
 class Translator(Model):
@@ -70,9 +75,9 @@ class Translator(Model):
         4. You do not use any external sources of information
         5. You do not use any spare words
         6. ONLY return the SQLQuery to run.
-        7. Keep the query simple and efficient
+        7. Keep the query simple, but fetch all columns.
         8. Do not assume anything that is not provided in the database schema.
-        9. Fetch enough information for detective to solve the case.
+        9. Fetch all columns for detective to solve the case.
 
         Translate the following user input:
         **Input:** {input}
