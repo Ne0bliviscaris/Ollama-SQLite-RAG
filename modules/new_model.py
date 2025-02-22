@@ -21,17 +21,22 @@ class Model:
         """Static part of model configuration"""
         return {
             "model": MODEL,
-            "format": "json",
             "num_predict": TOKENS_LIMIT,
             "top_p": TOP_P,
+            "top_k": TOP_K,
+            "format": "json",
         }
 
     def get_model_response(self):
         """Get response using instance attributes."""
         try:
             langchain = self.build_langchain()
-
-            return langchain.invoke(self.model_input())
+            response_str = langchain.invoke(self.model_input())
+            try:
+                parsed_response = json.loads(response_str)
+                return parsed_response
+            except:
+                return response_str
         except Exception as e:
             return f"Model Connection error. Make sure Ollama is running and {MODEL} is installed.\n{e}"
 
@@ -39,16 +44,9 @@ class Model:
         """Format the response from the model."""
         try:
             if isinstance(self.full_response, str):
-                response = json.loads(self.full_response)
-
-            elif isinstance(self.full_response, dict):
-                response = self.full_response
-            else:
-                return "Invalid response format", None
-
-            answer = response.get("sql_query", None)
-            thinking = response.get("thinking", None)
-
+                return None, None
+            answer = self.full_response.get("sql_query", None)
+            thinking = self.full_response.get("thinking", None)
             return answer, thinking
 
         except Exception as e:
@@ -60,6 +58,7 @@ class Translator(Model):
         return {
             "input": self.user_input,
             "question": self.user_input,
+            "top_k": 5,
         }
 
     def template(self) -> str:
@@ -71,40 +70,34 @@ class Translator(Model):
         {table_info}
 
         **Rules:**
-        0. Make sure you provide sql_query in the output.
-        1. Make sure the query is valid and corresponds to the thinking process.
-        1. Keep your thinking process short, but make sure it follows user input.
-        2. You ONLY use tables and columns from the Database Schema
-        3. You do not have access to the database, only the schema.
-        4. You do not have access to 'solution' table.
-        5. You do not use your own knowledge
-        6. You do not use any external sources of information
-        7. You do not use any spare words
-        8. ONLY return the SQLQuery to run.
-        9. Keep the query simple, always select all columns.
-        10. Do not assume anything that is not provided in the database schema.
-        11. Fetch all columns for detective to solve the case.
+        1. Ensure the output contains a valid SQL query.
+        2. The query must strictly follow the provided database schema and use only the available tables and columns.
+        3. Keep the thinking process brief, ensuring it logically aligns with the user input.
+        4. Avoid unnecessary complexity—only join tables or include conditions that are directly relevant to the user's question.
+        5. Fetch all columns by default using 'SELECT *', unless a specific column is mentioned in the input.
+        6. Be flexible in interpreting imprecise or incomplete user input while providing a valid SQL query.
+        7. Do not use your own knowledge or external sources.
+        8. Do not assume anything that is not explicitly present in the schema.
+        9. ONLY return the SQL query, no additional explanations or text.
+        10. If the user is asking about the order of items (first, last etc.), use an ORDER BY clause based on the relevant column.
+    
 
-        Translate the following user input:
+        
         **Input:** {input}
 
-
         **Output:**
-        Return outputs in the following JSON format:
         ```json
         {{
-            "thinking": "Thinking process, if there is any.",
-            "sql_query": "SELECT * FROM table_name WHERE condition;",
+            "thinking": "Thinking process.",
+            "sql_query": "SELECT * FROM table_name WHERE condition LIMIT {top_k};"
         }}
-        top_k: {top_k}
         ```
         """
         return PromptTemplate(
             template=translator,
-            input_variables=["input"],
+            input_variables=["input", "top_k"],
             partial_variables={
                 "dialect": "sqlite",
-                "top_k": TOP_K,
                 "table_info": get_db_schema(),
             },
         )
