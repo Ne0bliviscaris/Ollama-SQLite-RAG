@@ -78,8 +78,9 @@ class Translator(Model):
         **Output:**
         ```json
         {{
-            "thinking": "Thinking process.",
+            "user_input": "{input}",
             "sql_query": "SELECT * FROM table_name WHERE condition LIMIT {top_k};"
+            "thinking": "Thinking process.",
         }}
         ```
         """
@@ -97,14 +98,16 @@ class Translator(Model):
         db = database_connect()
         llm = ChatOllama(
             temperature=0,
+            seed=1,
             model=MODEL,
             num_predict=1000,  # Output tokens limit
-            top_p=0.1,  # Less randomness
-            top_k=10,  # Less randomness
+            top_p=0.95,
+            top_k=10,
             format="json",
             mirostat=2,
-            mirostat_eta=0.5,
-            mirostat_tau=5,
+            mirostat_eta=2,
+            mirostat_tau=1,
+            tfs_z=50,  # reduce the impact of less probable tokens
         )
         prompt = self.template()
         return create_sql_query_chain(llm, db, prompt)
