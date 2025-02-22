@@ -5,7 +5,7 @@ from langchain_core.prompts import PromptTemplate
 from langchain_ollama import ChatOllama
 
 from modules.database.db import database_connect, get_db_schema
-from modules.settings import MODEL, TOKENS_LIMIT, TOP_K, TOP_P
+from modules.settings import MODEL
 
 
 class Model:
@@ -16,16 +16,6 @@ class Model:
         self.context = context
         self.full_response = self.get_model_response()
         self.answer, self.thinking = self.format_response()
-
-    def model_config(self):
-        """Static part of model configuration"""
-        return {
-            "model": MODEL,
-            "num_predict": TOKENS_LIMIT,
-            "top_p": TOP_P,
-            "top_k": TOP_K,
-            "format": "json",
-        }
 
     def get_model_response(self):
         """Get response using instance attributes."""
@@ -105,7 +95,17 @@ class Translator(Model):
     def build_langchain(self):
         """Builds and returns a language chain with database and Ollama connections."""
         db = database_connect()
-        llm = ChatOllama(temperature=0, **self.model_config())
+        llm = ChatOllama(
+            temperature=0,
+            model=MODEL,
+            num_predict=1000,  # Output tokens limit
+            top_p=0.1,  # Less randomness
+            top_k=10,  # Less randomness
+            format="json",
+            mirostat=2,
+            mirostat_eta=0.5,
+            mirostat_tau=5,
+        )
         prompt = self.template()
         return create_sql_query_chain(llm, db, prompt)
 
