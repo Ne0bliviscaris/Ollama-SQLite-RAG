@@ -4,7 +4,7 @@ from langchain.chains.sql_database.query import create_sql_query_chain
 from langchain_core.prompts import PromptTemplate
 from langchain_ollama import ChatOllama
 
-from modules.database.db import database_connect, get_db_schema
+from modules.database.db import db_without_solution, get_db_schema
 from modules.settings import MODEL
 
 
@@ -96,12 +96,13 @@ class Translator(Model):
 
     def build_langchain(self):
         """Builds and returns a language chain with database and Ollama connections."""
-        db = database_connect()
+        db = db_without_solution()
         llm = ChatOllama(
             temperature=0,
             seed=1,
             model=MODEL,
-            num_predict=1000,  # Output tokens limit
+            # num_predict=128,  # Output tokens limit
+            num_predict=512,  # Output tokens limit
             top_p=0.95,
             format="json",
             mirostat=2,
@@ -109,7 +110,7 @@ class Translator(Model):
             mirostat_tau=1,
             tfs_z=50,  # reduce the impact of less probable tokens
             repeat_penalty=1.5,
-            top_k=5,
+            top_k=2,
         )
         prompt = self.template()
         return create_sql_query_chain(llm, db, prompt)
