@@ -48,7 +48,6 @@ class Translator(Model):
         return {
             "input": self.user_input,
             "question": self.user_input,
-            "top_k": 5,
         }
 
     def template(self) -> str:
@@ -70,6 +69,7 @@ class Translator(Model):
         8. Do not assume anything that is not explicitly present in the schema.
         9. ONLY return the SQL query, no additional explanations or text.
         10. If the user is asking about the order of items (first, last etc.), use an ORDER BY clause based on the relevant column.
+        11. While using columns from multiple tables, ensure you call proper tables.
 
         
         **Input:** {input}
@@ -103,13 +103,13 @@ class Translator(Model):
             model=MODEL,
             num_predict=1000,  # Output tokens limit
             top_p=0.95,
-            top_k=10,
             format="json",
             mirostat=2,
             mirostat_eta=2,
             mirostat_tau=1,
             tfs_z=50,  # reduce the impact of less probable tokens
             repeat_penalty=1.5,
+            top_k=5,
         )
         prompt = self.template()
         return create_sql_query_chain(llm, db, prompt)
