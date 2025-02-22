@@ -1,6 +1,6 @@
 import json
 
-from langchain.chains import create_sql_query_chain
+from langchain.chains.sql_database.query import create_sql_query_chain
 from langchain_core.prompts import PromptTemplate
 from langchain_ollama import ChatOllama
 
