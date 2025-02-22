@@ -70,7 +70,6 @@ class Translator(Model):
         8. Do not assume anything that is not explicitly present in the schema.
         9. ONLY return the SQL query, no additional explanations or text.
         10. If the user is asking about the order of items (first, last etc.), use an ORDER BY clause based on the relevant column.
-    
 
         
         **Input:** {input}
@@ -79,14 +78,16 @@ class Translator(Model):
         ```json
         {{
             "user_input": "{input}",
-            "sql_query": "SELECT * FROM table_name WHERE condition LIMIT {top_k};"
+            "sql_query": "SELECT * FROM table_name WHERE condition;"
             "thinking": "Thinking process.",
+            "rules_followed": "Rules followed while generating answer."
         }}
+        top_k: {top_k}
         ```
         """
         return PromptTemplate(
             template=translator,
-            input_variables=["input", "top_k"],
+            input_variables=["input"],
             partial_variables={
                 "dialect": "sqlite",
                 "table_info": get_db_schema(),
@@ -108,6 +109,7 @@ class Translator(Model):
             mirostat_eta=2,
             mirostat_tau=1,
             tfs_z=50,  # reduce the impact of less probable tokens
+            repeat_penalty=1.5,
         )
         prompt = self.template()
         return create_sql_query_chain(llm, db, prompt)
