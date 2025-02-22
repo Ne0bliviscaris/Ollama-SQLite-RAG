@@ -57,3 +57,8 @@ def database_connect():
     """Establishes a connection to the SQL database using the provided URI."""
     db = SQLDatabase.from_uri(f"sqlite:///{DB_FILE}")
     return db
+
+
+def db_without_solution():
+    """Connects to SQL database. Solution table is excluded."""
+    return SQLDatabase.from_uri(f"sqlite:///{DB_FILE}", ignore_tables=["solution"])
