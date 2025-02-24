@@ -7,6 +7,7 @@ from modules.new_model import Translator
 
 def chatbot():
     """Main chatbot function."""
+    # st.write(st.session_state)
     game_rules_sidebar()
     initialize_chat_session()
     display_chat_input()
@@ -65,8 +66,8 @@ def translate_question():
     with st.spinner("Translating to SQL..."):
         user_input = st.session_state.context["user_inputs"][-1]
         translation = Translator(user_input)
-        update_messages("database", translation.answer)
-        update_context("sql_queries", translation.answer)
+        update_messages("database", translation.sql_query)
+        update_context("sql_queries", translation.sql_query)
         update_current_state("database")
         st.rerun()
 

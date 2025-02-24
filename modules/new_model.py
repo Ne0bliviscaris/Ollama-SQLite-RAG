@@ -1,4 +1,5 @@
 import json
+import re
 
 from langchain.chains.sql_database.query import create_sql_query_chain
 from langchain_core.prompts import PromptTemplate
@@ -15,7 +16,8 @@ class Model:
         self.user_input = user_input
         self.context = context
         self.full_response = self.get_model_response()
-        self.answer, self.thinking = self.format_response()
+        self.sql_query = self.get_field("sql_query")
+        self.thinking = self.get_field("thinking")
 
     def get_model_response(self):
         """Get response using instance attributes."""
@@ -30,20 +32,35 @@ class Model:
         except Exception as e:
             return f"Model Connection error. Make sure Ollama is running and {MODEL} is installed.\n{e}"
 
-    def format_response(self):
-        """Format the response from the model."""
-        try:
-            if isinstance(self.full_response, str):
-                return None, None
-            answer = self.full_response.get("sql_query", None)
-            thinking = self.full_response.get("thinking", None)
-            return answer, thinking
+    def get_field(self, field=None):
+        """Get SQL query from parsed_response."""
+        if isinstance(self.full_response, dict):
+            try:
+                return self.full_response[field]
+            except:
+                return None
 
-        except Exception as e:
-            return f"Response formatting error. Model response:\n{self.full_response}", None
+        if isinstance(self.full_response, str):
+            regex = (
+                rf'"{field}"'  # "field"
+                r"\s*:\s*"  # : (with optional spaces)
+                r'"'  # opening "
+                r'([^"]*)'  # any characters except "
+                r'(?:"|$)'  # ending " or end of string
+            )
+            match = re.search(regex, self.full_response, re.VERBOSE)
+            if match:
+                return match.group(1)
+        return None
+
+    def get_thinking_process(self):
+        """Get thinking process from parsed_response."""
+        return self.response_json.get("thinking")
 
 
 class Translator(Model):
+    """SQL Translator model class."""
+
     def model_input(self):
         return {
             "input": self.user_input,
