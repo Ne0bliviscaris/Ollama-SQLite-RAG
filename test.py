@@ -17,8 +17,8 @@ response = Translator("find all murder cases from SQL City")
 # except:
 # print("\n\n" + response.full_response + "\n\n")
 print((response.full_response))
-print("\n\n", response.sql_query)
-print("\n\n", response.thinking)
+print("\nQuery:\n", response.sql_query)
+print("\nThinking:\n", response.thinking)
 # print((response.answer))
 
 
