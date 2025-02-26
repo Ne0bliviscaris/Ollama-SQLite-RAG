@@ -18,6 +18,8 @@ class Model:
         self.context = context
         self.full_response = self.get_model_response()
         self.sql_query = self.get_field("sql_query")
+        self.answer = self.get_field("answer")
+        self.next_step = self.get_field("next_step")
         self.thinking = self.get_field("thinking")
 
     def get_model_response(self):
@@ -122,80 +124,68 @@ class Translator(Model):
         return create_sql_query_chain(llm, db, prompt)
 
 
-# class Detective(Model):
+class Detective(Model):
+    """SQL Translator model class."""
 
-#     def template():
-#         """Prompt template to interpret SQL query results and provide a final answer."""
+    def model_input(self):
+        return {
+            "input": self.context,
+            "question": self.user_input,
+        }
 
-#         detective = """
-#         **ROLE:** You are a skilled detective. You are trying to solve a murder case and search for clues. Analyze received information. Interpret the results and provide a very concise, focused conclusion. Do not use any spare words.
+    def template(self) -> str:
+        """Prompt template to translate text instructions into SQL query"""
+        detective = """
+        **ROLE:** You are a detective. You are trying to solve a murder case and search for clues. Analyze received information in reference to received question. Please provide a concise, focused conclusion. Then provide next logical step to solve the mystery.
 
+        **Rules:**
+        1. Ensure the output contains answer and next_steps.
+        2. Keep the thinking process brief, ensuring it logically aligns with the user input and context.
+        3. Do not use your own knowledge or external sources.
+        4. Do not assume anything that is not explicitly stated.
 
-#         **Input:**
+        
+        **Input:** {input}{question}
 
-#         - **Input:** "These are the received results you have to interpret"
+        **Context:** {input}
 
-#         Only write a short, concise conclusion.
+        **Output:**
+        ```json
+        {{
+            "question": "{question}",
+            "answer": "Concise conclusion here."
+            "next_step": "Next step to progress the case."
+            "thinking": "Thinking process.",
+            "rules_followed": "Rules followed while generating answer."
+        }}
+        top_k: {top_k}
+        ```
+        """
+        return PromptTemplate(
+            template=detective,
+            input_variables=["input", "question"],
+            partial_variables={
+                "dialect": "sqlite",
+                "table_info": get_db_schema(),
+            },
+        )
 
-#         - **Answer:** "Concise conclusion here."
-
-#         **Only use the following tables:**
-
-#         {table_info}
-
-#         **Input:** {input}
-
-#         **TopK:** {top_k}
-#         """
-#         prompt_template = PromptTemplate.from_template(detective)
-#         return prompt_template
-
-#     def template(self) -> str:
-#         """Prompt template to translate text instructions into SQL query"""
-#         translator = """
-#         **ROLE:** You are a skilled detective. You are trying to solve a murder case and search for clues. Analyze received information. Interpret the results and provide a very concise, focused conclusion. Do not use any spare words.
-
-#         **Database Schema:**
-#         {table_info}
-
-#         **Rules:**
-#         1. Keep your thinking process short and concise.
-#         2. You ONLY use tables and columns from the Database Schema
-#         3. You do not use your own knowledge
-#         4. You do not use any external sources of information
-#         5. You do not use any spare words
-#         6. ONLY return the SQLQuery to run.
-#         7. Keep the query simple, but fetch all columns.
-#         8. Do not assume anything that is not provided in the database schema.
-#         9. Fetch all columns for detective to solve the case.
-
-#         Translate the following user input:
-#         **Input:** {input}
-
-
-#         **Output:**
-#         Return outputs in the following JSON format:
-#         ```json
-#         {{
-#             "thinking": "Thinking process, if there is any."
-#             "sql_query": "SELECT * FROM table_name WHERE condition;",
-#         }}
-#         top_k: {top_k}
-#         ```
-#         """
-#         return PromptTemplate(
-#             template=translator,
-#             input_variables=["input", "question"],
-#             partial_variables={
-#                 "dialect": "sqlite",
-#                 "top_k": TOP_K,
-#                 "table_info": get_db_schema(),
-#             },
-#         )
-
-#     def build_langchain(self):
-#         """Builds and returns a language chain with database and Ollama connections."""
-#         db = database_connect()
-#         llm = ChatOllama(temperature=0, **self.model_config())
-#         template = self.template()
-#         return create_sql_query_chain(llm, db, template)
+    def build_langchain(self):
+        """Builds and returns a language chain with database and Ollama connections."""
+        db = db_without_solution()
+        llm = ChatOllama(
+            temperature=0,
+            seed=1,
+            model=MODEL,
+            num_predict=512,  # Output tokens limit
+            top_p=0.95,
+            format="json",
+            mirostat=2,
+            mirostat_eta=2,
+            mirostat_tau=1,
+            tfs_z=50,  # reduce the impact of less probable tokens
+            repeat_penalty=1.5,
+            top_k=2,
+        )
+        prompt = self.template()
+        return create_sql_query_chain(llm, db, prompt)
