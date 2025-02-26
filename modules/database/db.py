@@ -2,8 +2,8 @@ import sqlite3
 
 from langchain_community.utilities import SQLDatabase
 
-from modules.database.tools import convert_list_to_string
 from modules.settings import DB_FILE
+from modules.tools import convert_list_to_string
 
 
 def execute_sql_query(extracted_query):

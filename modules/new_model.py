@@ -7,6 +7,7 @@ from langchain_ollama import ChatOllama
 
 from modules.database.db import db_without_solution, get_db_schema
 from modules.settings import MODEL
+from modules.tools import model_answer_regex
 
 
 class Model:
@@ -35,22 +36,10 @@ class Model:
     def get_field(self, field=None):
         """Get SQL query from parsed_response."""
         if isinstance(self.full_response, dict):
-            try:
-                return self.full_response[field]
-            except:
-                return None
+            return self.full_response.get(field)
 
         if isinstance(self.full_response, str):
-            regex = (
-                rf'"{field}"'  # "field"
-                r"\s*:\s*"  # : (with optional spaces)
-                r'"'  # opening "
-                r'([^"]*)'  # any characters except "
-                r'(?:"|$)'  # ending " or end of string
-            )
-            match = re.search(regex, self.full_response, re.VERBOSE)
-            if match:
-                return match.group(1)
+            return model_answer_regex(self.full_response, field)
         return None
 
     def get_thinking_process(self):
