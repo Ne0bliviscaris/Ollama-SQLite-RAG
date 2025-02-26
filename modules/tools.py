@@ -2,14 +2,16 @@ import re
 
 
 def model_answer_regex(response, field_name):
-    regex = (
-        rf'"{field_name}"'  # "field"
-        r"\s*:\s*"  # : (with optional spaces)
-        r'"'  # opening "
-        r'([^"]*)'  # any characters except "
-        r'(?:"|$)'  # ending " or end of string
-    )
+    """Extract field value from JSON-like text response."""
+    FIELD = rf'"{field_name}"'  # Field name in quotes
+    SEPARATOR = r"\s*:\s*"  # Colon : with optional spaces
+    QUOTE = r'"'  # Opening quote '
+    CONTENT = r'([^"]*)'  # Capture group for field content
+    END = r'(?:"|$)'  # Closing quote ' or end of string
+
+    regex = f"{FIELD}{SEPARATOR}{QUOTE}{CONTENT}{END}"
     match = re.search(regex, response, re.VERBOSE)
+
     if match:
         return match.group(1)
     return None
