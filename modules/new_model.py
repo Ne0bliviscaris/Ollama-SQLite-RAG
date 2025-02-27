@@ -127,11 +127,10 @@ class Translator(Model):
 
 
 class Detective(Model):
-    """Detective model class."""
+    """SQL Translator model class."""
 
     def model_input(self):
         return {
-            "context": self.context,
             "user_input": self.user_input,
         }
 
@@ -152,7 +151,6 @@ class Detective(Model):
         9. For **patterns, summaries, or trends**, analyze and summarize the provided data.
         10. If no relevant data is found, return `"answer": "No relevant data available."`
         11. Follow the output format strictly.
-        12. Follow the rules strictly and avoid personal interpretations. Output followed rules in "rules_followed".
 
         **User_input:** {{user_input}}
 
@@ -165,7 +163,7 @@ class Detective(Model):
             "answer": "Your conclusion here.",
             "next_step": "Logical next step based on the answer.",
             "thinking": "Brief reasoning behind the answer and next step.",
-            "rules_followed": "Rules followed to answer."
+            "rules_followed": "[List rules followed while generating answer.]"
         }}
         ```
         """
@@ -174,7 +172,7 @@ class Detective(Model):
             input_variables=["user_input"],
             partial_variables={
                 "context": self.context,
-                "top_k": 2,
+                "top_k": 1,
             },
         )
 
@@ -192,6 +190,5 @@ class Detective(Model):
             mirostat_tau=1,
             tfs_z=50,  # reduce the impact of less probable tokens
             repeat_penalty=1.5,
-            top_k=2,
         )
         return self.prompt() | llm | StrOutputParser()
