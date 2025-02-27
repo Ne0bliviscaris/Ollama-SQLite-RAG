@@ -127,7 +127,7 @@ class Translator(Model):
 
 
 class Detective(Model):
-    """SQL Translator model class."""
+    """Detective model class."""
 
     def model_input(self):
         return {
@@ -138,18 +138,22 @@ class Detective(Model):
     def prompt(self) -> str:
         """Prompt template to translate text instructions into SQL query"""
         detective = """
-        **ROLE:** You are a detective. You are trying to solve a murder case and search for clues. Analyze received information in reference to received question. Please provide a concise, focused conclusion. Then provide next logical step to solve the mystery.
+        **ROLE:** You are a detective solving a case. Analyze the provided information in reference to the user's question. Your response must be concise, fact-based, and logically structured.
 
         **Rules:**
-        1. Ensure the output contains answer and next_steps.
-        2. Keep the thinking process brief, ensuring it logically aligns with the user input and context.
-        3. Do not use your own knowledge or external sources.
-        4. Do not assume anything that is not explicitly stated.
-        5. Make sure you use proper columns while generating aswers. First row is column titles
-        6. Format answer using given output structure. Follow instructions in values.
-        7. Only form answers based on received context. Do not use your own knowledge or any other sources.
+        1. Provide an "answer" based only on the given context.
+        2. Suggest a "next_step" that logically follows from the answer.
+        3. Keep "thinking" brief but clear, explaining how the answer was derived.
+        4. Use only the received data—do not assume or use external knowledge.
+        5. Use exact column names from the query results in responses.
+        6. For **last, highest, or largest values**, return the maximum in the relevant column.
+        7. For **first, lowest, or smallest values**, return the minimum in the relevant column.
+        8. For **specific persons, objects, or events**, find an exact match in the data.
+        9. For **patterns, summaries, or trends**, analyze and summarize the provided data.
+        10. If no relevant data is found, return `"answer": "No relevant data available."`
+        11. Follow the output format strictly.
+        12. Follow the rules strictly and avoid personal interpretations. Output followed rules in "rules_followed".
 
-        
         **User_input:** {{user_input}}
 
         **Context:** {{context}}
@@ -158,20 +162,19 @@ class Detective(Model):
         ```json
         {{
             "user_input": "{user_input}",
-            "answer": "Logical conclusion here."
-            "next_step": "Using received clues, suggest next step."
-            "thinking": "Thinking process that led to the answer and reasoning behind the suggested next step.",
-            "rules_followed": "List rules followed while generating answer."
+            "answer": "Your conclusion here.",
+            "next_step": "Logical next step based on the answer.",
+            "thinking": "Brief reasoning behind the answer and next step.",
+            "rules_followed": "Rules followed to answer."
         }}
-        top_k: {top_k}
         ```
         """
         return PromptTemplate(
             template=detective,
             input_variables=["user_input"],
             partial_variables={
-                "top_k": 1,
                 "context": self.context,
+                "top_k": 2,
             },
         )
 
@@ -182,13 +185,13 @@ class Detective(Model):
             seed=1,
             model=MODEL,
             num_predict=1024,  # Output tokens limit
-            top_p=0.6,
+            top_p=0.95,
             format="json",
             mirostat=2,
             mirostat_eta=2,
             mirostat_tau=1,
             tfs_z=50,  # reduce the impact of less probable tokens
             repeat_penalty=1.5,
-            top_k=40,
+            top_k=2,
         )
         return self.prompt() | llm | StrOutputParser()
