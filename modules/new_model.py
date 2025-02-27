@@ -2,6 +2,7 @@ import json
 import re
 
 from langchain.chains.sql_database.query import create_sql_query_chain
+from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import PromptTemplate
 from langchain_ollama import ChatOllama
 
@@ -21,6 +22,7 @@ class Model:
         self.answer = self.get_field("answer")
         self.next_step = self.get_field("next_step")
         self.thinking = self.get_field("thinking")
+        self.rules = self.get_field("rules_followed")
 
     def get_model_response(self):
         """Get response using instance attributes."""
@@ -58,7 +60,7 @@ class Translator(Model):
             "question": self.user_input,
         }
 
-    def template(self) -> str:
+    def prompt(self) -> str:
         """Prompt template to translate text instructions into SQL query"""
         translator = """
         **ROLE:** You are a SQL Translator. Your task is to translate the following question into a valid SQL query. Use {dialect} dialect.
@@ -120,7 +122,7 @@ class Translator(Model):
             repeat_penalty=1.5,
             top_k=2,
         )
-        prompt = self.template()
+        prompt = self.prompt()
         return create_sql_query_chain(llm, db, prompt)
 
 
@@ -129,11 +131,11 @@ class Detective(Model):
 
     def model_input(self):
         return {
-            "input": self.context,
-            "question": self.user_input,
+            "context": self.context,
+            "user_input": self.user_input,
         }
 
-    def template(self) -> str:
+    def prompt(self) -> str:
         """Prompt template to translate text instructions into SQL query"""
         detective = """
         **ROLE:** You are a detective. You are trying to solve a murder case and search for clues. Analyze received information in reference to received question. Please provide a concise, focused conclusion. Then provide next logical step to solve the mystery.
@@ -143,49 +145,50 @@ class Detective(Model):
         2. Keep the thinking process brief, ensuring it logically aligns with the user input and context.
         3. Do not use your own knowledge or external sources.
         4. Do not assume anything that is not explicitly stated.
+        5. Make sure you use proper columns while generating aswers. First row is column titles
+        6. Format answer using given output structure. Follow instructions in values.
+        7. Only form answers based on received context. Do not use your own knowledge or any other sources.
 
         
-        **Input:** {input}{question}
+        **User_input:** {{user_input}}
 
-        **Context:** {input}
+        **Context:** {{context}}
 
         **Output:**
         ```json
         {{
-            "question": "{question}",
-            "answer": "Concise conclusion here."
-            "next_step": "Next step to progress the case."
-            "thinking": "Thinking process.",
-            "rules_followed": "Rules followed while generating answer."
+            "user_input": "{user_input}",
+            "answer": "Logical conclusion here."
+            "next_step": "Using received clues, suggest next step."
+            "thinking": "Thinking process that led to the answer and reasoning behind the suggested next step.",
+            "rules_followed": "List rules followed while generating answer."
         }}
         top_k: {top_k}
         ```
         """
         return PromptTemplate(
             template=detective,
-            input_variables=["input", "question"],
+            input_variables=["user_input"],
             partial_variables={
-                "dialect": "sqlite",
-                "table_info": get_db_schema(),
+                "top_k": 1,
+                "context": self.context,
             },
         )
 
     def build_langchain(self):
         """Builds and returns a language chain with database and Ollama connections."""
-        db = db_without_solution()
         llm = ChatOllama(
             temperature=0,
             seed=1,
             model=MODEL,
-            num_predict=512,  # Output tokens limit
-            top_p=0.95,
+            num_predict=1024,  # Output tokens limit
+            top_p=0.6,
             format="json",
             mirostat=2,
             mirostat_eta=2,
             mirostat_tau=1,
             tfs_z=50,  # reduce the impact of less probable tokens
             repeat_penalty=1.5,
-            top_k=2,
+            top_k=40,
         )
-        prompt = self.template()
-        return create_sql_query_chain(llm, db, prompt)
+        return self.prompt() | llm | StrOutputParser()
