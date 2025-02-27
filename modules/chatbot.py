@@ -146,15 +146,14 @@ def show_query_results(index):
         return
 
     with st.expander("Query Results"):
-        results = query_results
-        df = convert_results_to_dataframe(results)
+        df = convert_results_to_dataframe(query_results)
         st.dataframe(df)
 
 
 def convert_results_to_dataframe(results):
     """Convert query results to DataFrame."""
     rows = results.strip().split("\n")
-    headers = rows[0].replace("COLUMNS:", "").split(",")
+    headers = rows[0].split(", ")
     records = [eval(row) for row in rows[1:]]
     df = pd.DataFrame(records, columns=headers)
     return df

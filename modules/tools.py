@@ -19,7 +19,7 @@ def model_answer_regex(response, field_name):
 
 def convert_list_to_string(results, columns):
     """Convert list of tuples to string with column names"""
-    results_str = f"COLUMNS:{','.join(columns)}\n"
+    results_str = f"{', '.join(columns)}\n"
     for row in results:
         results_str += str(row) + "\n"
     return results_str
