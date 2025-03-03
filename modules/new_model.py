@@ -149,9 +149,12 @@ class Detective(Model):
         7. For **first, lowest, or smallest values**, return the minimum in the relevant column.
         8. For **specific persons, objects, or events**, find an exact match in the data.
         9. For **patterns, summaries, or trends**, analyze and summarize the provided data.
-        11. Follow the output format strictly.
-        12. Follow the rules strictly and avoid personal interpretations. Output followed rules in "rules_followed".
-        13. Dates are stored in database as integers in the format YYYYMMDD.
+        10. Dates are stored as integers in the format YYYYMMDD.
+        11. If query results contain relevant data, extract and summarize key information.
+        12. If multiple records match, summarize them concisely.
+        13. If no relevant data is found, return `"answer": "No relevant data available."`
+        14. If the user input is ambiguous, provide a response based on the most likely interpretation.
+        15. Ensure the answer is correct—scan the received context carefully.
 
         **User_input:** {{user_input}}
 
