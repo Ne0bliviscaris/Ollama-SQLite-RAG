@@ -2,7 +2,7 @@ import pandas as pd
 import streamlit as st
 
 from modules.database.db import execute_sql_query
-from modules.new_model import Translator
+from modules.new_model import Detective, Translator
 
 
 def chatbot():
@@ -110,12 +110,17 @@ def execute_query():
 def detective_conclusion():
     """Detective's conclusion."""
     with st.spinner("Detective is analyzing the results..."):
-        # last_question = st.session_state.context["user_inputs"][-1]
-        # last_query_results = st.session_state.context["query_results"][-1]
-        # detective = Detective(question=last_question, context=last_query_results)
-        # update_messages("assistant", detective.answer)
-        # update_context("detective_answers", detective.answer)
-        # update_context("detective_thinking", detective.thinking)
+        current_index = st.session_state.index - 1
+
+        user_input = st.session_state.context["user_inputs"][current_index]
+        query_results = st.session_state.context["query_results"][current_index]
+
+        detective = Detective(user_input=user_input, context=query_results)
+
+        update_context("detective_answers", detective.answer, current_index)
+        update_context("detective_thinking", detective.thinking, current_index)
+        update_messages("assistant", detective.answer, current_index)
+
         st.session_state.current_state = None
         st.rerun()
 
@@ -167,5 +172,11 @@ def show_thinking_process(index):
 
 def game_rules_sidebar():
     """Displays game rules & hints in the sidebar."""
-    st.sidebar.title("Game Rules")
-    st.sidebar.markdown("• Be concise\n• Only share relevant details\n• Stay in character")
+    with st.sidebar:
+        st.sidebar.title("Instructions")
+        st.sidebar.markdown(
+            """
+            A crime has taken place and the detective needs your help. The detective gave you the crime scene report, but you somehow lost it. You vaguely remember that the crime was a ​murder​ that occurred sometime on ​Jan.15, 2018​ and that it took place in ​SQL City​. Start by retrieving the corresponding crime scene report from the police department’s database.
+            """
+        )
+        st.text_area(label="Notes")
