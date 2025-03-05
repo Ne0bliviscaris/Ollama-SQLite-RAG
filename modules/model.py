@@ -3,6 +3,7 @@ import json
 from langchain.chains.sql_database.query import create_sql_query_chain
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import PromptTemplate
+from langchain_core.runnables import RunnablePassthrough
 from langchain_ollama import ChatOllama
 
 from modules.database.db import db_without_solution, get_db_schema
@@ -125,11 +126,12 @@ class Translator(Model):
 
 
 class Detective(Model):
-    """SQL Translator model class."""
+    """Detective model for analyzing case data and providing conclusions."""
 
     def model_input(self):
         return {
             "user_input": self.user_input,
+            "context": self.context,
         }
 
     def prompt(self) -> str:
@@ -147,7 +149,7 @@ class Detective(Model):
         7. For **first, lowest, or smallest values**, return the minimum in the relevant column.
         8. For **specific persons, objects, or events**, find an exact match in the data.
         9. For **patterns, summaries, or trends**, analyze and summarize the provided data.
-        10. Dates are stored as integers in the format YYYYMMDD.
+        10. Dates are stored in the database as integers in the format YYYYMMDD. Make sure you read them properly.
         11. If query results contain relevant data, extract and summarize key information.
         12. If multiple records match, summarize them concisely.
         13. If no relevant data is found, return `"answer": "No relevant data available."`
@@ -161,19 +163,18 @@ class Detective(Model):
         **Output:**
         ```json
         {{
-            "user_input": "{user_input}",
             "answer": "Your conclusion here.",
             "next_step": "Logical next step based on the answer.",
             "thinking": "Reasoning behind the answer and next step.",
+            "user_input": "{user_input}",
             "rules_followed": "[List rules followed while generating answer.]"
         }}
         ```
         """
         return PromptTemplate(
             template=detective,
-            input_variables=["user_input"],
+            input_variables=["user_input", "context"],
             partial_variables={
-                "context": self.context,
                 "top_k": 1,
             },
         )
@@ -193,4 +194,8 @@ class Detective(Model):
             tfs_z=50,  # reduce the impact of less probable tokens
             repeat_penalty=1.5,
         )
-        return self.prompt() | llm | StrOutputParser()
+        prompt = self.prompt()
+
+        return (
+            {"user_input": RunnablePassthrough(), "context": lambda x: self.context} | prompt | llm | StrOutputParser()
+        )

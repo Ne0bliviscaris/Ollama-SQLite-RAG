@@ -3,7 +3,6 @@ import sqlite3
 from langchain_community.utilities import SQLDatabase
 
 from modules.settings import DB_FILE
-from modules.tools import convert_list_to_string
 
 
 def execute_sql_query(extracted_query):
@@ -15,8 +14,12 @@ def execute_sql_query(extracted_query):
 
         column_names = [description[0] for description in cursor.description]
 
-        results_str = convert_list_to_string(results, column_names)
-        return results_str
+        return convert_results_to_dict(results, column_names)
+
+
+def convert_results_to_dict(records, column_names):
+    """Convert list of tuples to a list of dictionaries."""
+    return [dict(zip(column_names, row)) for row in records]
 
 
 def get_db_schema():
