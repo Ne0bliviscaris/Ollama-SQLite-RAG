@@ -16,7 +16,23 @@ def title_screen():
     st.title("SQL RAG - local Ollama - Langchain")
     st.markdown(
         """
-        Welcome to the SQL RAG chatbot! Ask about the case to get started.
+        ### 🔍 Welcome, Detective
+        
+        A murder has been committed in SQL City, and you've been called to solve the case. 
+        
+        Your only lead is that the crime occurred on **January 15, 2018**, but the crime scene report has gone missing.
+        Using your detective skills and SQL knowledge, you must:
+        
+        1. Query the police database to find relevant information
+        2. Follow leads by asking the right questions
+        3. Connect the dots to identify the killer
+        
+        Type your investigation queries in natural language, and the system will:
+        - Translate your questions to SQL
+        - Search the database
+        - Help you analyze the results
+        
+        Can you solve the mystery before the trail goes cold?
         """
     )
 
