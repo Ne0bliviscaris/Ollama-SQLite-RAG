@@ -1,4 +1,4 @@
-from modules.new_model import Translator
+from modules.model import Translator
 
 response = Translator("find all murder cases from SQL City")
 # response = Translator("Find who lives in the last house in Franklin Ave. Order house numbers")
@@ -12,3 +12,4 @@ response = Translator("find all murder cases from SQL City")
 print((response.full_response))
 print("\nQuery:\n", response.sql_query)
 print("\nThinking:\n", response.thinking)
+# print("Prompt:\n", response.prompt())

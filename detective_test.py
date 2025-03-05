@@ -1,4 +1,4 @@
-from modules.new_model import Detective
+from modules.model import Detective
 
 # question = "find last house on Franklin Ave"
 question = "find house with the largest address number on Franklin Ave"

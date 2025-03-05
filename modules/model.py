@@ -1,5 +1,4 @@
 import json
-import re
 
 from langchain.chains.sql_database.query import create_sql_query_chain
 from langchain_core.output_parsers import StrOutputParser
@@ -111,7 +110,6 @@ class Translator(Model):
             temperature=0,
             seed=1,
             model=MODEL,
-            # num_predict=128,  # Output tokens limit
             num_predict=512,  # Output tokens limit
             top_p=0.95,
             format="json",
