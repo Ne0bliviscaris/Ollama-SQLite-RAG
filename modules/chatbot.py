@@ -2,7 +2,7 @@ import pandas as pd
 import streamlit as st
 
 from modules.database.db import execute_sql_query
-from modules.new_model import Detective, Translator
+from modules.model import Detective, Translator
 
 
 def chatbot():
@@ -171,12 +171,41 @@ def show_thinking_process(index):
 
 
 def game_rules_sidebar():
-    """Displays game rules & hints in the sidebar."""
+    """Displays game rules, hints and tools in the sidebar."""
     with st.sidebar:
-        st.sidebar.title("Instructions")
-        st.sidebar.markdown(
+        st.title("Detective's Handbook")
+
+        with st.expander("Case Brief", expanded=True):
+            st.markdown(
+                """
+                **THE CASE**
+                
+                - Crime: Murder
+                - Date: January 15, 2018
+                - Location: SQL City
+                - Status: Unsolved
+                
+                Begin by finding the crime scene report.
             """
-            A crime has taken place and the detective needs your help. The detective gave you the crime scene report, but you somehow lost it. You vaguely remember that the crime was a ​murder​ that occurred sometime on ​Jan.15, 2018​ and that it took place in ​SQL City​. Start by retrieving the corresponding crime scene report from the police department’s database.
+            )
+
+        with st.expander("Investigation Tips"):
+            st.markdown(
+                """
+                - Ask specific questions about people, places, or evidence
+                - Follow leads from one piece of evidence to another
+                - Look for connections between witnesses and suspects
+                - Pay attention to alibis and timelines
             """
+            )
+
+        # Save notes in session state for persistence
+        if "notes" not in st.session_state:
+            st.session_state.notes = ""
+
+        st.session_state.notes = st.text_area(
+            label="Detective's Notes",
+            value=st.session_state.notes,
+            height=300,
+            placeholder="Record your clues, suspects and theories here...",
         )
-        st.text_area(label="Notes")
