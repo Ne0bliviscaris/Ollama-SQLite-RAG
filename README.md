@@ -1,4 +1,4 @@
-# SQL Detective - A Murder Mystery RAG Application
+# SQL Detective - A Murder Mystery RAG Game
 
 SQL Detective is an interactive investigation game where you solve a murder mystery by querying a police database using natural language. This application showcases the power of Retrieval-Augmented Generation (RAG) techniques with local small language models and database integration.
 
